@@ -1,0 +1,69 @@
+<div class="stack" data-testid="material-step">
+  <div class="card">
+    <h2>Choose a material</h2>
+    <p class="hint">Only materials currently stocked and active are shown.</p>
+
+    @if (materials().length === 0) {
+      <div class="state" data-testid="materials-empty">
+        <h3>No active materials</h3>
+        <p>An administrator needs to add a material before quoting is possible.</p>
+      </div>
+    } @else {
+      <div class="material-list" data-testid="material-list">
+        @for (material of materials(); track material.id) {
+          <button
+            type="button"
+            class="material-card"
+            [class.is-selected]="material.id === selectedId()"
+            [attr.data-testid]="'material-' + material.id"
+            [attr.aria-pressed]="material.id === selectedId()"
+            (click)="select(material)"
+          >
+            <span class="material-card__name">{{ material.name }}</span>
+            <span class="material-card__meta">
+              {{ material.thicknessIn }}&Prime; thick &middot; sheet {{ material.sheetWidthIn }}&Prime; ×
+              {{ material.sheetHeightIn }}&Prime;
+            </span>
+            <span class="material-card__price">{{ money(material.perSheetCostCents) }} / sheet</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="card">
+    <h2>Quantity</h2>
+    <div class="field" style="max-width: 260px">
+      <label for="quantity">Parts to cut</label>
+      <input
+        id="quantity"
+        type="number"
+        [min]="quantityMin()"
+        [max]="quantityMax()"
+        step="1"
+        data-testid="quantity-input"
+        [value]="quantity()"
+        (input)="setQuantity($event)"
+      />
+      <span class="hint">Between {{ quantityMin() }} and {{ quantityMax() }} parts per quote.</span>
+    </div>
+
+    @if (quantityError()) {
+      <p class="alert alert--error" style="margin-top: var(--space-3)" data-testid="quantity-error" role="alert">
+        {{ quantityError() }}
+      </p>
+    }
+
+    <dl class="facts" style="margin-top: var(--space-4)">
+      <div class="fact"><dt>Parts per sheet</dt><dd data-testid="nest-per-sheet">{{ nesting().perSheet }}</dd></div>
+      <div class="fact"><dt>Grid</dt><dd>{{ nesting().cols }} × {{ nesting().rows }}</dd></div>
+      <div class="fact"><dt>Sheets needed</dt><dd data-testid="nest-sheet-count">{{ nesting().sheetCount }}</dd></div>
+      <div class="fact"><dt>Sheet utilisation</dt><dd>{{ (nesting().utilization * 100).toFixed(1) }}%</dd></div>
+    </dl>
+  </div>
+
+  <div class="step__actions">
+    <a class="btn" routerLink="/quote/new/upload" data-testid="material-back">Back</a>
+    <a class="btn btn--primary" routerLink="/quote/new/bends" data-testid="material-continue">Continue to bends</a>
+  </div>
+</div>

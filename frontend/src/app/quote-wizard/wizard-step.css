@@ -1,0 +1,50 @@
+.step__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-5);
+}
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-7) var(--space-4);
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.dropzone.is-over { border-color: var(--brand-primary); background: var(--brand-primary-soft); }
+.dropzone:active { background: var(--brand-primary-soft); }
+.dropzone__glyph { font-size: 34px; line-height: 1; color: var(--brand-primary); }
+.dropzone__title { font-weight: 700; }
+.progress { height: 8px; border-radius: var(--radius-pill); background: var(--border-subtle); overflow: hidden; }
+.progress__bar { height: 100%; background: var(--brand-primary); transition: width .2s ease; }
+.material-list { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); }
+.material-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: left;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  cursor: pointer;
+  font: inherit;
+  min-height: var(--tap-target);
+}
+.material-card:active { background: var(--surface-sunken); }
+.material-card.is-selected { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-border); }
+.material-card__name { font-weight: 700; font-size: var(--text-sm); }
+.material-card__meta { font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono); }
+.material-card__price { font-weight: 700; color: var(--brand-primary-strong); }
+@media (max-width: 768px) {
+  .step__actions { flex-direction: column-reverse; }
+  .step__actions .btn { width: 100%; }
+  .dropzone { padding: var(--space-6) var(--space-3); }
+}

@@ -1,0 +1,18 @@
+<div class="modal" role="presentation" (click)="backdrop($event)">
+  <div
+    class="modal__panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title()"
+    data-testid="modal-panel"
+  >
+    <header class="modal__head">
+      <h2>{{ title() }}</h2>
+      <button type="button" class="btn btn--ghost btn--sm" data-testid="modal-close" (click)="dismiss.emit()">
+        Close
+      </button>
+    </header>
+    <div class="modal__body"><ng-content /></div>
+    <footer class="modal__foot"><ng-content select="[modal-actions]" /></footer>
+  </div>
+</div>

@@ -1,0 +1,56 @@
+<div class="card card--flush" data-testid="admin-orders-page">
+  <div class="card__head">
+    <div class="row">
+      <label class="hint" for="ao-status">Status</label>
+      <select id="ao-status" class="control" data-testid="admin-orders-status" [value]="status()" (change)="setStatus($event)">
+        <option value="all">All</option>
+        <option value="paid">Paid</option>
+        <option value="in_production">In production</option>
+        <option value="shipped">Shipped</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <input
+        class="control"
+        type="search"
+        placeholder="Search customer or order number"
+        aria-label="Search orders"
+        data-testid="admin-orders-search"
+        [value]="search()"
+        (input)="setSearch($event)"
+      />
+    </div>
+    <span class="hint" data-testid="admin-orders-count">{{ filtered().length }} orders</span>
+  </div>
+
+  @if (filtered().length === 0) {
+    <div class="state" data-testid="admin-orders-empty">
+      <h3>No orders match</h3>
+      <p>Adjust the status filter or clear the search.</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Order</th><th>Customer</th><th>Quote</th><th>Material</th>
+            <th class="num">Qty</th><th>Placed</th><th>Status</th><th class="num">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of filtered(); track order.id) {
+            <tr [attr.data-testid]="'admin-order-row-' + order.id">
+              <td class="mono">{{ order.orderNumber }}</td>
+              <td>{{ order.customerName }}</td>
+              <td class="mono">{{ order.quoteReference }}</td>
+              <td>{{ order.materialName }}</td>
+              <td class="num">{{ order.quantity }}</td>
+              <td class="mono">{{ order.placedAt.slice(0, 10) }}</td>
+              <td><span [class]="'badge ' + statusClass(order.status)">{{ order.status }}</span></td>
+              <td class="num">{{ money(order.totalCents) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

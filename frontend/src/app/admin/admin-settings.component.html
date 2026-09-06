@@ -1,0 +1,92 @@
+<div class="stack" data-testid="admin-settings-page">
+  @if (unconfigured().length) {
+    <div class="alert alert--warn" data-testid="unconfigured-banner" role="status">
+      <div>
+        <strong>The following need credentials to activate:</strong>
+        <p style="margin: var(--space-1) 0 0">{{ unconfiguredNames() }}</p>
+      </div>
+    </div>
+  } @else {
+    <div class="alert alert--success" data-testid="all-configured-banner" role="status">
+      <strong>All backing services and integrations are configured.</strong>
+    </div>
+  }
+
+  <div class="card">
+    <h2>Backing services</h2>
+    <p class="hint">
+      Connection details are read from the environment first; anything set here overrides a
+      missing or placeholder value. Secrets are stored encrypted and only ever shown masked.
+    </p>
+    <div class="stack" style="margin-top: var(--space-4)">
+      @for (svc of services(); track svc.id) {
+        <div class="svc" [attr.data-testid]="'service-' + svc.id">
+          <div class="svc__info">
+            <div class="row" style="gap: var(--space-2)">
+              <span class="svc__name">{{ svc.name }}</span>
+              <span [class]="'badge ' + (svc.configured ? 'badge--success' : 'badge--danger')"
+                    [attr.data-testid]="'status-' + svc.id">
+                {{ svc.configured ? 'Configured' : 'Not configured' }}
+              </span>
+            </div>
+            <p class="svc__desc">{{ svc.description }}</p>
+            <p class="svc__keys">{{ svc.envKeys.join(', ') }}</p>
+          </div>
+          <div class="svc__form">
+            <label class="visually-hidden" [attr.for]="'input-' + svc.id">{{ svc.name }} credential</label>
+            <input
+              [id]="'input-' + svc.id"
+              type="password"
+              autocomplete="off"
+              [placeholder]="svc.maskedValue ?? 'Paste credential'"
+              [attr.data-testid]="'input-' + svc.id"
+            />
+            <button type="button" class="btn btn--sm" [attr.data-testid]="'save-' + svc.id" (click)="save(svc.id)">
+              Save credential
+            </button>
+            @if (savedId() === svc.id) {
+              <span class="saved-note" [attr.data-testid]="'saved-' + svc.id">Saved — value encrypted at rest.</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Integrations</h2>
+    <div class="stack" style="margin-top: var(--space-4)">
+      @for (svc of integrations(); track svc.id) {
+        <div class="svc" [attr.data-testid]="'service-' + svc.id">
+          <div class="svc__info">
+            <div class="row" style="gap: var(--space-2)">
+              <span class="svc__name">{{ svc.name }}</span>
+              <span [class]="'badge ' + (svc.configured ? 'badge--success' : 'badge--danger')"
+                    [attr.data-testid]="'status-' + svc.id">
+                {{ svc.configured ? 'Configured' : 'Not configured' }}
+              </span>
+            </div>
+            <p class="svc__desc">{{ svc.description }}</p>
+            <p class="svc__keys">{{ svc.envKeys.join(', ') }}</p>
+          </div>
+          <div class="svc__form">
+            <label class="visually-hidden" [attr.for]="'input-' + svc.id">{{ svc.name }} credential</label>
+            <input
+              [id]="'input-' + svc.id"
+              type="password"
+              autocomplete="off"
+              [placeholder]="svc.maskedValue ?? 'Paste API key'"
+              [attr.data-testid]="'input-' + svc.id"
+            />
+            <button type="button" class="btn btn--sm" [attr.data-testid]="'save-' + svc.id" (click)="save(svc.id)">
+              Save credential
+            </button>
+            @if (savedId() === svc.id) {
+              <span class="saved-note" [attr.data-testid]="'saved-' + svc.id">Saved — value encrypted at rest.</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

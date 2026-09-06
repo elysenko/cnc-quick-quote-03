@@ -1,0 +1,76 @@
+<div class="auth" data-testid="signup-page">
+  <aside class="auth__aside">
+    <h2>Create your shop account.</h2>
+    <p>
+      Every quote you generate is saved with its own price snapshot, so the number you were
+      shown is the number you pay — even if our rates change later.
+    </p>
+    <div class="auth__points">
+      <div class="auth__point"><span>✓</span><span>Unlimited quotes. You only pay when you place an order.</span></div>
+      <div class="auth__point"><span>✓</span><span>Card payment handled by Stripe — we never store your card details.</span></div>
+      <div class="auth__point"><span>✓</span><span>Order history, receipts and confirmation emails in one place.</span></div>
+    </div>
+  </aside>
+
+  <main class="auth__main">
+    <div class="auth__card">
+      <div class="auth__brand">
+        <span class="auth__mark" aria-hidden="true">{{ branding().logoInitials }}</span>
+        <div>
+          <strong>{{ branding().companyName }}</strong>
+          <div class="hint">{{ branding().tagline }}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h1>Create account</h1>
+        <p class="hint">Takes about thirty seconds.</p>
+
+        @if (error()) {
+          <p class="alert alert--error" data-testid="signup-error" role="alert">{{ error() }}</p>
+        }
+
+        <form class="auth__form" (ngSubmit)="submit()" novalidate>
+          <div class="field">
+            <label for="signup-name">Full name</label>
+            <input id="signup-name" name="name" type="text" autocomplete="name"
+                   placeholder="Jordan Reyes" data-testid="signup-name" [(ngModel)]="name" />
+          </div>
+          <div class="field">
+            <label for="signup-email">Email address</label>
+            <input id="signup-email" name="email" type="email" autocomplete="email" inputmode="email"
+                   placeholder="you@yourshop.com" data-testid="signup-email" [(ngModel)]="email" />
+          </div>
+          <div class="field">
+            <label for="signup-password">Password</label>
+            <input id="signup-password" name="password" type="password" autocomplete="new-password"
+                   placeholder="At least 8 characters" data-testid="signup-password" [(ngModel)]="password" />
+          </div>
+          <div class="field">
+            <label for="signup-confirm">Confirm password</label>
+            <input id="signup-confirm" name="confirm" type="password" autocomplete="new-password"
+                   placeholder="Re-enter your password" data-testid="signup-confirm" [(ngModel)]="confirm" />
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--block" data-testid="signup-submit">
+            Create account
+          </button>
+        </form>
+
+        @if (previewShortcut()) {
+          <div class="auth__shortcut">
+            <button type="button" class="btn btn--ghost btn--sm" data-testid="signup-preview-shortcut"
+                    (click)="skipLogin()">
+              {{ previewShortcut() }}
+            </button>
+          </div>
+        }
+      </div>
+
+      <p class="auth__foot">
+        Already registered?
+        <a routerLink="/login" class="btn--link" data-testid="signup-to-login">Sign in</a>
+      </p>
+    </div>
+  </main>
+</div>

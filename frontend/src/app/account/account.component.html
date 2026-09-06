@@ -1,0 +1,84 @@
+<div class="page" data-testid="account-page">
+  <div class="page-head">
+    <div>
+      <h1>Account</h1>
+      <p>Your profile, sign-in details and shop defaults.</p>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <h2>Profile</h2>
+        <div class="stack">
+          <div class="field">
+            <label for="acct-name">Full name</label>
+            <input id="acct-name" type="text" autocomplete="name" data-testid="account-name" [(ngModel)]="name" />
+          </div>
+          <div class="field">
+            <label for="acct-email">Email address</label>
+            <input id="acct-email" type="email" autocomplete="email" data-testid="account-email" [(ngModel)]="email" />
+          </div>
+          <div class="field">
+            <label for="acct-company">Company</label>
+            <input id="acct-company" type="text" autocomplete="organization" data-testid="account-company" [(ngModel)]="company" />
+          </div>
+        </div>
+        @if (saved()) {
+          <p class="alert alert--success" style="margin-top: var(--space-4)" data-testid="account-saved">
+            Profile saved.
+          </p>
+        }
+        <button type="button" class="btn btn--primary" style="margin-top: var(--space-4)" data-testid="account-save" (click)="save()">
+          Save changes
+        </button>
+      </div>
+
+      <div class="card">
+        <h2>Change password</h2>
+        <div class="stack">
+          <div class="field">
+            <label for="acct-current">Current password</label>
+            <input id="acct-current" type="password" autocomplete="current-password" data-testid="account-current-password" />
+          </div>
+          <div class="field">
+            <label for="acct-new">New password</label>
+            <input id="acct-new" type="password" autocomplete="new-password" data-testid="account-new-password" />
+          </div>
+        </div>
+        <button type="button" class="btn" style="margin-top: var(--space-4)">Update password</button>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2>Account status</h2>
+        <dl>
+          <div class="kv"><dt>Role</dt><dd><span class="badge badge--info" data-testid="account-role">{{ role() }}</span></dd></div>
+          <div class="kv"><dt>Member since</dt><dd>{{ memberSince() }}</dd></div>
+          <div class="kv"><dt>Quotes generated</dt><dd>{{ quoteCount() }}</dd></div>
+          <div class="kv"><dt>Orders placed</dt><dd>{{ orderCount() }}</dd></div>
+          <div class="kv"><dt>Lifetime spend</dt><dd>{{ money(lifetimeSpendCents()) }}</dd></div>
+        </dl>
+      </div>
+
+      @if (isAdmin()) {
+        <div class="card">
+          <h2>Administrator</h2>
+          <p class="hint">You can manage materials, pricing, machine limits and orders.</p>
+          <a class="btn btn--primary btn--block" routerLink="/admin/settings" data-testid="account-admin-link">
+            Open admin console
+          </a>
+        </div>
+      }
+
+      <div class="card">
+        <h2>Sessions</h2>
+        <p class="hint">Signing out revokes this device's refresh token immediately.</p>
+        <button type="button" class="btn btn--danger btn--block" data-testid="account-sign-out" (click)="signOut()">
+          Sign out
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

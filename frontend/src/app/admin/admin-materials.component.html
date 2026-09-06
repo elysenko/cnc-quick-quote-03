@@ -1,0 +1,103 @@
+<div class="stack" data-testid="admin-materials-page">
+  <div class="card card--flush">
+    <div class="card__head">
+      <div class="row">
+        <label class="hint" for="mat-filter">Show</label>
+        <select id="mat-filter" class="control" data-testid="materials-filter" [value]="filter()" (change)="setFilter($event)">
+          <option value="all">All materials</option>
+          <option value="active">Active only</option>
+          <option value="inactive">Retired only</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn--primary btn--sm" data-testid="materials-add" (click)="openEditor('new')">
+        Add material
+      </button>
+    </div>
+
+    @if (filtered().length === 0) {
+      <div class="state" data-testid="materials-empty">
+        <h3>No materials match that filter</h3>
+        <p>Add a material so customers can quote against it.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Name</th><th class="num">Thickness</th><th>Sheet size</th>
+              <th class="num">Sheet cost</th><th class="num">Multiplier</th><th>Status</th>
+              <th><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (material of filtered(); track material.id) {
+              <tr [attr.data-testid]="'material-row-' + material.id">
+                <td>{{ material.name }}</td>
+                <td class="num">{{ material.thicknessIn }}&Prime;</td>
+                <td class="mono">{{ material.sheetWidthIn }} × {{ material.sheetHeightIn }}</td>
+                <td class="num">{{ money(material.perSheetCostCents) }}</td>
+                <td class="num">{{ material.costMultiplier }}</td>
+                <td>
+                  <span [class]="'badge ' + (material.active ? 'badge--success' : '')">
+                    {{ material.active ? 'Active' : 'Retired' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="row" style="gap: var(--space-2); flex-wrap: nowrap">
+                    <button type="button" class="btn btn--sm" [attr.data-testid]="'material-edit-' + material.id"
+                            (click)="openEditor(material.id)">Edit</button>
+                    <button type="button" class="btn btn--sm" [attr.data-testid]="'material-toggle-' + material.id"
+                            (click)="toggle(material.id)">
+                      {{ material.active ? 'Retire' : 'Restore' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  @if (modal() === 'edit-material') {
+    <app-modal [title]="editing() ? 'Edit material' : 'Add material'" (dismiss)="closeEditor()">
+      <div class="form-grid">
+        <div class="field field--wide">
+          <label for="mat-name">Name</label>
+          <input id="mat-name" type="text" data-testid="material-name-input" [(ngModel)]="draftName" />
+        </div>
+        <div class="field">
+          <label for="mat-thickness">Thickness (in)</label>
+          <input id="mat-thickness" type="number" min="0.001" step="0.001" data-testid="material-thickness-input" [(ngModel)]="draftThickness" />
+        </div>
+        <div class="field">
+          <label for="mat-cost">Cost per sheet (USD)</label>
+          <input id="mat-cost" type="number" min="0" step="0.01" data-testid="material-cost-input" [(ngModel)]="draftCost" />
+        </div>
+        <div class="field">
+          <label for="mat-w">Sheet width (in)</label>
+          <input id="mat-w" type="number" min="1" step="0.1" data-testid="material-width-input" [(ngModel)]="draftWidth" />
+        </div>
+        <div class="field">
+          <label for="mat-h">Sheet height (in)</label>
+          <input id="mat-h" type="number" min="1" step="0.1" data-testid="material-height-input" [(ngModel)]="draftHeight" />
+        </div>
+        <div class="field">
+          <label for="mat-mult">Cost multiplier</label>
+          <input id="mat-mult" type="number" min="0.1" step="0.01" data-testid="material-multiplier-input" [(ngModel)]="draftMultiplier" />
+          <span class="hint">Applied to sheet cost during pricing.</span>
+        </div>
+      </div>
+      @if (validationError()) {
+        <p class="alert alert--error" style="margin-top: var(--space-4)" data-testid="material-validation-error" role="alert">
+          {{ validationError() }}
+        </p>
+      }
+      <ng-container modal-actions>
+        <button type="button" class="btn" data-testid="material-cancel" (click)="closeEditor()">Cancel</button>
+        <button type="button" class="btn btn--primary" data-testid="material-save" (click)="saveMaterial()">Save material</button>
+      </ng-container>
+    </app-modal>
+  }
+</div>

@@ -1,0 +1,93 @@
+<div class="bend-editor" data-testid="bend-editor">
+  <div class="bend-editor__canvas-col">
+    <div class="bend-editor__stage" #stage>
+      <canvas
+        #canvas
+        class="bend-editor__canvas"
+        data-testid="bend-editor-canvas"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"
+      ></canvas>
+    </div>
+    <p class="hint" data-testid="bend-editor-hint">
+      Drag across the part to draw a bend line. Drag an endpoint handle to move it. Bend lines are
+      stored alongside your drawing — the uploaded DXF is never modified.
+    </p>
+  </div>
+
+  <div class="bend-editor__list">
+    <div class="bend-editor__list-head">
+      <h3>Bend lines</h3>
+      <span class="badge" data-testid="bend-count">{{ bends().length }} on part</span>
+    </div>
+
+    @if (bends().length === 0) {
+      <div class="state" data-testid="bends-empty">
+        <h3>No bends yet</h3>
+        <p>This part will be quoted flat. Drag on the drawing to add your first bend.</p>
+      </div>
+    } @else {
+      <ul class="bend-list">
+        @for (bend of bends(); track bend.id; let i = $index) {
+          <li class="bend-list__item" [attr.data-testid]="'bend-item-' + bend.id">
+            <div class="bend-list__row">
+              <span class="bend-list__index">Bend {{ i + 1 }}</span>
+              <button
+                type="button"
+                class="btn btn--danger btn--sm"
+                [attr.data-testid]="'bend-delete-' + bend.id"
+                (click)="remove(bend.id)"
+              >
+                Delete
+              </button>
+            </div>
+            <div class="bend-list__controls">
+              <label class="field">
+                <span>Angle (degrees)</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="180"
+                  step="1"
+                  [value]="bend.angleDeg"
+                  [attr.data-testid]="'bend-angle-' + bend.id"
+                  (input)="setAngle(bend.id, $event)"
+                />
+              </label>
+              <div class="field">
+                <span class="label">Direction</span>
+                <div class="toggle" role="group" aria-label="Bend direction">
+                  <button
+                    type="button"
+                    class="toggle__btn"
+                    [class.is-active]="bend.direction === 'up'"
+                    [attr.data-testid]="'bend-up-' + bend.id"
+                    (click)="setDirection(bend.id, 'up')"
+                  >
+                    Up
+                  </button>
+                  <button
+                    type="button"
+                    class="toggle__btn"
+                    [class.is-active]="bend.direction === 'down'"
+                    [attr.data-testid]="'bend-down-' + bend.id"
+                    (click)="setDirection(bend.id, 'down')"
+                  >
+                    Down
+                  </button>
+                </div>
+              </div>
+            </div>
+            @if (errors()[bend.id]) {
+              <p class="error-text" [attr.data-testid]="'bend-error-' + bend.id">
+                {{ errors()[bend.id] }}
+              </p>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

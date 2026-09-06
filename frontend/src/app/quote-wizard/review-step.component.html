@@ -1,0 +1,62 @@
+<div class="split" data-testid="review-step">
+  <div class="stack">
+    <div class="card">
+      <h2>Review your quote</h2>
+      <dl class="facts">
+        <div class="fact"><dt>Drawing</dt><dd>{{ drawing()?.filename }}</dd></div>
+        <div class="fact"><dt>Material</dt><dd>{{ materialName() }}</dd></div>
+        <div class="fact"><dt>Quantity</dt><dd>{{ quantity() }}</dd></div>
+        <div class="fact"><dt>Bends per part</dt><dd>{{ bends().length }}</dd></div>
+        <div class="fact">
+          <dt>Bounding box</dt>
+          <dd data-testid="review-bbox">{{ drawing()?.bboxWIn }}&Prime; × {{ drawing()?.bboxHIn }}&Prime;</dd>
+        </div>
+        <div class="fact"><dt>Cut length / part</dt><dd>{{ drawing()?.cutLengthIn }}&Prime;</dd></div>
+        <div class="fact"><dt>Sheets</dt><dd>{{ nesting().sheetCount }}</dd></div>
+        <div class="fact"><dt>Utilisation</dt><dd>{{ (nesting().utilization * 100).toFixed(1) }}%</dd></div>
+      </dl>
+      <p class="alert alert--info" style="margin-top: var(--space-4)">
+        The bounding box above is in inches, converted from the drawing's detected units
+        (<strong>{{ drawing()?.detectedUnits }}</strong>). Confirm it matches your part — every
+        price below scales from it.
+      </p>
+    </div>
+
+    <app-work-bed-canvas
+      heading="Nested sheet preview"
+      [bedWidthIn]="bedWidthIn()"
+      [bedHeightIn]="bedHeightIn()"
+      [nesting]="nesting()"
+      [polylines]="polylines()"
+      [bends]="bends()"
+    />
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <h2>Price breakdown</h2>
+      <app-cost-breakdown [breakdown]="breakdown()" />
+    </div>
+
+    <div class="card">
+      <p class="hint">
+        Generating a quote locks this price against a snapshot of today's rates. Later rate
+        changes will not affect it.
+      </p>
+      <button
+        type="button"
+        class="btn btn--primary btn--block"
+        data-testid="review-generate"
+        (click)="generate()"
+      >
+        Generate quote
+      </button>
+      <a
+        class="btn btn--ghost btn--block"
+        routerLink="/quote/new/bends"
+        style="margin-top: var(--space-2)"
+        data-testid="review-back"
+      >Back to bends</a>
+    </div>
+  </div>
+</div>

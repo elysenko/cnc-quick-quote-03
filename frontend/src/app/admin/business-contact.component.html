@@ -1,0 +1,30 @@
+<div class="card" data-testid="business-contact">
+  <h2>Contact details</h2>
+  <p class="hint">Shown on receipts, confirmation emails and the no-shipping-methods fallback.</p>
+
+  <div class="form-grid" style="margin-top: var(--space-4)">
+    <div class="field field--wide">
+      <label for="c-email">Orders email</label>
+      <input id="c-email" type="email" inputmode="email" data-testid="contact-email" [(ngModel)]="email" />
+    </div>
+    <div class="field">
+      <label for="c-phone">Phone</label>
+      <input id="c-phone" type="tel" inputmode="tel" data-testid="contact-phone" [(ngModel)]="phone" />
+    </div>
+    <div class="field">
+      <label for="c-hours">Shop hours</label>
+      <input id="c-hours" type="text" data-testid="contact-hours" [(ngModel)]="hours" />
+    </div>
+    <div class="field field--wide">
+      <label for="c-address">Shop address</label>
+      <textarea id="c-address" rows="3" data-testid="contact-address" [(ngModel)]="address"></textarea>
+    </div>
+  </div>
+
+  @if (saved()) {
+    <p class="alert alert--success" style="margin-top: var(--space-4)" data-testid="contact-saved">Contact details saved.</p>
+  }
+  <button type="button" class="btn btn--primary" style="margin-top: var(--space-4)" data-testid="contact-save" (click)="save()">
+    Save contact details
+  </button>
+</div>

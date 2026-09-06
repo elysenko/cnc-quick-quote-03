@@ -1,0 +1,61 @@
+<div class="stack" data-testid="admin-machine-page">
+  <div class="card">
+    <h2>Machine</h2>
+    <p class="hint">Bed size, part spacing and quantity limits used by the nesting engine.</p>
+
+    @if (saved()) {
+      <p class="alert alert--success" style="margin-top: var(--space-4)" data-testid="machine-saved">Machine settings saved.</p>
+    }
+    @if (error()) {
+      <p class="alert alert--error" style="margin-top: var(--space-4)" data-testid="machine-error" role="alert">{{ error() }}</p>
+    }
+
+    <div class="form-grid" style="margin-top: var(--space-4)">
+      <div class="field">
+        <label for="m-bedw">Bed width (in)</label>
+        <input id="m-bedw" type="number" min="1" step="0.5" data-testid="machine-bed-width" [(ngModel)]="bedWidth" />
+      </div>
+      <div class="field">
+        <label for="m-bedh">Bed height (in)</label>
+        <input id="m-bedh" type="number" min="1" step="0.5" data-testid="machine-bed-height" [(ngModel)]="bedHeight" />
+      </div>
+      <div class="field">
+        <label for="m-margin">Sheet edge margin (in)</label>
+        <input id="m-margin" type="number" min="0" step="0.05" data-testid="machine-margin" [(ngModel)]="margin" />
+        <span class="hint">Applied on all four edges.</span>
+      </div>
+      <div class="field">
+        <label for="m-spacing">Part spacing (in)</label>
+        <input id="m-spacing" type="number" min="0" step="0.05" data-testid="machine-spacing" [(ngModel)]="spacing" />
+        <span class="hint">Gap between neighbouring parts.</span>
+      </div>
+      <div class="field">
+        <label for="m-qmin">Minimum quantity</label>
+        <input id="m-qmin" type="number" min="1" step="1" data-testid="machine-quantity-min" [(ngModel)]="quantityMin" />
+      </div>
+      <div class="field">
+        <label for="m-qmax">Maximum quantity</label>
+        <input id="m-qmax" type="number" min="1" step="1" data-testid="machine-quantity-max" [(ngModel)]="quantityMax" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Uploads</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label for="u-size">Max upload size (MB)</label>
+        <input id="u-size" type="number" min="1" step="1" data-testid="upload-max-size" [(ngModel)]="maxUploadMb" />
+        <span class="hint">Checked against the declared size, then enforced on the byte stream.</span>
+      </div>
+      <div class="field field--wide">
+        <label for="u-ext">Allowed extensions</label>
+        <input id="u-ext" type="text" data-testid="upload-extensions" [(ngModel)]="extensions" />
+        <span class="hint">Comma-separated. Checked before anything is written to storage.</span>
+      </div>
+    </div>
+    <button type="button" class="btn btn--primary" style="margin-top: var(--space-5)" data-testid="machine-save" (click)="save()">
+      Save machine &amp; upload settings
+    </button>
+  </div>
+</div>

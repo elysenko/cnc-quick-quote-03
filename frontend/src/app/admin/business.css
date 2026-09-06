@@ -1,0 +1,22 @@
+.color { padding: var(--space-1); height: var(--tap-target); cursor: pointer; }
+.secret-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; }
+.secret-row .field { flex: 1 1 260px; }
+.mask { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-secondary); }
+.sandbox {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-4); border-radius: var(--radius-md);
+  background: var(--status-warning-soft); border: 1px solid var(--status-warning-border);
+}
+.sandbox__body { flex: 1; }
+.switch { position: relative; width: 52px; height: 30px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.switch__track {
+  position: absolute; inset: 0; border-radius: var(--radius-pill);
+  background: var(--border-strong); transition: background-color .15s ease; pointer-events: none;
+}
+.switch input:checked + .switch__track { background: var(--brand-primary); }
+.switch__thumb {
+  position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--surface-card); transition: transform .15s ease; pointer-events: none;
+}
+.switch input:checked ~ .switch__thumb { transform: translateX(22px); }

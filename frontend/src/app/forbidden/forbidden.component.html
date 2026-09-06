@@ -1,0 +1,14 @@
+<div class="page" data-testid="forbidden-page">
+  <div class="card forbidden">
+    <span class="badge badge--danger">403 — Forbidden</span>
+    <h1>The admin console is restricted</h1>
+    <p>
+      Your account is signed in, but it does not have the administrator role required to manage
+      materials, pricing, machine settings or orders. Ask an administrator to grant you access.
+    </p>
+    <div class="row">
+      <a class="btn btn--primary" routerLink="/quotes" data-testid="forbidden-quotes">Back to my quotes</a>
+      <a class="btn" routerLink="/account" data-testid="forbidden-account">View my account</a>
+    </div>
+  </div>
+</div>

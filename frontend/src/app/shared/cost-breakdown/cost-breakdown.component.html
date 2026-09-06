@@ -1,0 +1,30 @@
+<div class="breakdown" data-testid="cost-breakdown">
+  <dl class="breakdown__lines">
+    @for (line of breakdown().lines; track line.key) {
+      <div class="breakdown__row" [attr.data-testid]="'breakdown-' + line.key">
+        <dt>
+          <span class="breakdown__label">{{ line.label }}</span>
+          <span class="breakdown__detail">{{ line.detail }}</span>
+        </dt>
+        <dd class="num">{{ money(line.amountCents) }}</dd>
+      </div>
+    }
+  </dl>
+
+  <div class="breakdown__row breakdown__row--sub">
+    <dt>Calculated subtotal</dt>
+    <dd class="num" data-testid="breakdown-subtotal">{{ money(breakdown().subtotalCents) }}</dd>
+  </div>
+
+  @if (breakdown().minimumOrderApplied) {
+    <p class="alert alert--warn" data-testid="minimum-order-applied">
+      Minimum order of {{ money(breakdown().minimumOrderCents) }} applied — this job prices below
+      our shop minimum, so the minimum is charged instead of the calculated subtotal.
+    </p>
+  }
+
+  <div class="breakdown__total">
+    <span>Quote total</span>
+    <strong class="num" data-testid="breakdown-total">{{ money(breakdown().totalCents) }}</strong>
+  </div>
+</div>

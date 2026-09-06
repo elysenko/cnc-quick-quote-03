@@ -1,0 +1,35 @@
+<div class="stack" data-testid="bend-step">
+  <div class="card">
+    <div class="card__head" style="padding: 0 0 var(--space-4); border: none">
+      <div>
+        <h2>Bend lines</h2>
+        <p class="hint" style="margin: 0">
+          Bend mode overlays your parsed outline. Each bend adds
+          {{ money(costPerBendCents()) }} per part to the quote.
+        </p>
+      </div>
+      <span class="badge badge--warn">Orange dashed = bend</span>
+    </div>
+
+    <app-bend-editor
+      [polylines]="polylines()"
+      [partWidthIn]="partWidthIn()"
+      [partHeightIn]="partHeightIn()"
+      [(bends)]="bends"
+    />
+  </div>
+
+  <div class="card">
+    <dl class="facts">
+      <div class="fact"><dt>Bends per part</dt><dd data-testid="bends-per-part">{{ bends().length }}</dd></div>
+      <div class="fact"><dt>Quantity</dt><dd>{{ quantity() }}</dd></div>
+      <div class="fact"><dt>Total bends</dt><dd data-testid="bends-total">{{ bends().length * quantity() }}</dd></div>
+      <div class="fact"><dt>Bending cost</dt><dd>{{ money(bends().length * quantity() * costPerBendCents()) }}</dd></div>
+    </dl>
+  </div>
+
+  <div class="step__actions">
+    <a class="btn" routerLink="/quote/new/material" data-testid="bends-back">Back</a>
+    <a class="btn btn--primary" routerLink="/quote/new/review" data-testid="bends-continue">Continue to review</a>
+  </div>
+</div>

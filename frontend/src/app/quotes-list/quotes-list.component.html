@@ -1,0 +1,86 @@
+<div class="page" data-testid="quotes-list-page">
+  <div class="page-head">
+    <div>
+      <h1>Quotes</h1>
+      <p>Every quote keeps the price it was generated with.</p>
+    </div>
+    <a class="btn btn--primary" routerLink="/quote/new/upload" data-testid="quotes-new">New quote</a>
+  </div>
+
+  <div class="card card--flush">
+    <div class="card__head">
+      <div class="row">
+        <label class="hint" for="sort">Sort by</label>
+        <select id="sort" class="control" data-testid="quotes-sort" [value]="sort()" (change)="setSort($event)">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="total">Highest total</option>
+        </select>
+      </div>
+      <span class="hint" data-testid="quotes-count">{{ quotes().length }} quotes</span>
+    </div>
+
+    @if (loading()) {
+      <div class="card__body stack" data-testid="quotes-loading">
+        @for (row of [1, 2, 3, 4]; track row) { <div class="skeleton"></div> }
+      </div>
+    } @else if (error()) {
+      <div class="state" data-testid="quotes-error">
+        <h3>Could not load your quotes</h3>
+        <p>{{ error() }}</p>
+        <button type="button" class="btn" (click)="retry()">Try again</button>
+      </div>
+    } @else if (sorted().length === 0) {
+      <div class="state" data-testid="quotes-empty">
+        <h3>No quotes yet</h3>
+        <p>Upload a DXF drawing and we will price it in seconds.</p>
+        <a class="btn btn--primary" routerLink="/quote/new/upload">Start a quote</a>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Drawing</th>
+              <th>Material</th>
+              <th class="num">Qty</th>
+              <th class="num">Sheets</th>
+              <th>Status</th>
+              <th class="num">Total</th>
+              <th><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (quote of paged(); track quote.id) {
+              <tr [attr.data-testid]="'quote-row-' + quote.id">
+                <td class="mono">{{ quote.reference }}</td>
+                <td>{{ quote.filename }}</td>
+                <td>{{ quote.materialName }}</td>
+                <td class="num">{{ quote.quantity }}</td>
+                <td class="num">{{ quote.sheetCount }}</td>
+                <td><span [class]="'badge ' + statusClass(quote.status)">{{ quote.status }}</span></td>
+                <td class="num">{{ money(quote.totalCents) }}</td>
+                <td>
+                  <a class="btn btn--sm" [routerLink]="['/quotes', quote.id]" [attr.data-testid]="'quote-open-' + quote.id">
+                    Open
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card__foot">
+        <button type="button" class="btn btn--sm" [disabled]="page() === 1" data-testid="quotes-prev" (click)="go(page() - 1)">
+          Previous
+        </button>
+        <span class="hint" data-testid="quotes-page-label">Page {{ page() }} of {{ pageCount() }}</span>
+        <button type="button" class="btn btn--sm" [disabled]="page() >= pageCount()" data-testid="quotes-next" (click)="go(page() + 1)">
+          Next
+        </button>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,58 @@
+<div class="stack" data-testid="admin-pricing-page">
+  <div class="card">
+    <h2>Pricing</h2>
+    <p class="hint">
+      Total = max(minimum order, setup + cut length ft × rate + sheet cost + handling + bends × rate).
+      Changes apply to new quotes only — every existing quote keeps its own price snapshot.
+    </p>
+
+    @if (saved()) {
+      <p class="alert alert--success" style="margin-top: var(--space-4)" data-testid="pricing-saved">
+        Pricing saved. New quotes will use these rates.
+      </p>
+    }
+    @if (error()) {
+      <p class="alert alert--error" style="margin-top: var(--space-4)" data-testid="pricing-error" role="alert">
+        {{ error() }}
+      </p>
+    }
+
+    <div class="form-grid" style="margin-top: var(--space-4)">
+      <div class="field">
+        <label for="p-setup">Setup fee (USD)</label>
+        <input id="p-setup" type="number" min="0" step="0.01" data-testid="pricing-setup" [(ngModel)]="setupFee" />
+        <span class="hint">Charged once per quote.</span>
+      </div>
+      <div class="field">
+        <label for="p-cut">Cost per linear foot (USD)</label>
+        <input id="p-cut" type="number" min="0" step="0.01" data-testid="pricing-cut" [(ngModel)]="costPerFoot" />
+        <span class="hint">Applied to total cut length across all parts.</span>
+      </div>
+      <div class="field">
+        <label for="p-bend">Cost per bend (USD)</label>
+        <input id="p-bend" type="number" min="0" step="0.01" data-testid="pricing-bend" [(ngModel)]="costPerBend" />
+        <span class="hint">Multiplied by bends per part × quantity.</span>
+      </div>
+      <div class="field">
+        <label for="p-handling">Handling fee (USD)</label>
+        <input id="p-handling" type="number" min="0" step="0.01" data-testid="pricing-handling" [(ngModel)]="handlingFee" />
+        <span class="hint">Packing and staging.</span>
+      </div>
+      <div class="field">
+        <label for="p-min">Minimum order (USD)</label>
+        <input id="p-min" type="number" min="0" step="0.01" data-testid="pricing-minimum" [(ngModel)]="minimumOrder" />
+        <span class="hint">Charged when the calculated subtotal falls below it.</span>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn--primary" style="margin-top: var(--space-5)" data-testid="pricing-save" (click)="save()">
+      Save pricing
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>Worked example</h2>
+    <p class="hint">A 24-piece run with 42.6&Prime; of cut per part and 2 bends, on 2 sheets.</p>
+    <app-cost-breakdown [breakdown]="preview()" />
+  </div>
+</div>

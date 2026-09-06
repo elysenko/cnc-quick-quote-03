@@ -1,0 +1,86 @@
+<div class="auth" data-testid="login-page">
+  <aside class="auth__aside">
+    <h2>Quote a laser-cut part in under a minute.</h2>
+    <p>
+      Upload your DXF, choose a material, and see the price, the nested sheet and the cut path
+      before you commit.
+    </p>
+    <div class="auth__points">
+      <div class="auth__point"><span>1</span><span>Automatic geometry read — cut length, bounding box and units straight from the file.</span></div>
+      <div class="auth__point"><span>2</span><span>Live work-bed preview with the laser head tracing your actual cut path.</span></div>
+      <div class="auth__point"><span>3</span><span>Itemized pricing you can audit line by line, then pay by card.</span></div>
+    </div>
+  </aside>
+
+  <main class="auth__main">
+    <div class="auth__card">
+      <div class="auth__brand">
+        <span class="auth__mark" aria-hidden="true">{{ branding().logoInitials }}</span>
+        <div>
+          <strong>{{ branding().companyName }}</strong>
+          <div class="hint">{{ branding().tagline }}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h1>Sign in</h1>
+        <p class="hint">Use the email address your quotes are sent to.</p>
+
+        @if (error()) {
+          <p class="alert alert--error" data-testid="login-error" role="alert">{{ error() }}</p>
+        }
+
+        <form class="auth__form" (ngSubmit)="submit()" novalidate>
+          <div class="field">
+            <label for="login-email">Email address</label>
+            <input
+              id="login-email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              inputmode="email"
+              placeholder="you@yourshop.com"
+              data-testid="login-email"
+              [(ngModel)]="email"
+            />
+          </div>
+
+          <div class="field">
+            <label for="login-password">Password</label>
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Your password"
+              data-testid="login-password"
+              [(ngModel)]="password"
+            />
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--block" data-testid="login-submit">
+            Sign in
+          </button>
+        </form>
+
+        @if (previewShortcut()) {
+          <div class="auth__shortcut">
+            <button
+              type="button"
+              class="btn btn--ghost btn--sm"
+              data-testid="login-preview-shortcut"
+              (click)="skipLogin()"
+            >
+              {{ previewShortcut() }}
+            </button>
+          </div>
+        }
+      </div>
+
+      <p class="auth__foot">
+        No account yet?
+        <a routerLink="/signup" class="btn--link" data-testid="login-to-signup">Create one</a>
+      </p>
+    </div>
+  </main>
+</div>

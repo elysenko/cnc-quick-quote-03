@@ -1,0 +1,77 @@
+<div class="page" data-testid="orders-list-page">
+  <div class="page-head">
+    <div>
+      <h1>Orders</h1>
+      <p>Everything you have paid for, with receipts.</p>
+    </div>
+    <a class="btn btn--primary" routerLink="/quote/new/upload" data-testid="orders-new-quote">New quote</a>
+  </div>
+
+  <div class="card card--flush">
+    <div class="card__head">
+      <div class="row">
+        <label class="hint" for="status">Status</label>
+        <select id="status" class="control" data-testid="orders-status" [value]="status()" (change)="setStatus($event)">
+          <option value="all">All orders</option>
+          <option value="paid">Paid</option>
+          <option value="in_production">In production</option>
+          <option value="shipped">Shipped</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <span class="hint" data-testid="orders-count">{{ filtered().length }} matching</span>
+    </div>
+
+    @if (loading()) {
+      <div class="card__body stack" data-testid="orders-loading">
+        @for (row of [1, 2, 3]; track row) { <div class="skeleton"></div> }
+      </div>
+    } @else if (error()) {
+      <div class="state" data-testid="orders-error">
+        <h3>Could not load your orders</h3>
+        <p>{{ error() }}</p>
+        <button type="button" class="btn" (click)="retry()">Try again</button>
+      </div>
+    } @else if (filtered().length === 0) {
+      <div class="state" data-testid="orders-empty">
+        <h3>No orders match that filter</h3>
+        <p>Try a different status, or generate a quote and order it.</p>
+        <a class="btn btn--primary" routerLink="/quotes">Browse my quotes</a>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Order</th><th>Quote</th><th>Material</th><th class="num">Qty</th>
+              <th>Shipping</th><th>Status</th><th class="num">Total</th><th><span class="visually-hidden">Receipt</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of paged(); track order.id) {
+              <tr [attr.data-testid]="'order-row-' + order.id">
+                <td class="mono">{{ order.orderNumber }}</td>
+                <td class="mono">{{ order.quoteReference }}</td>
+                <td>{{ order.materialName }}</td>
+                <td class="num">{{ order.quantity }}</td>
+                <td>{{ order.shippingMethod }}</td>
+                <td><span [class]="'badge ' + statusClass(order.status)">{{ label(order.status) }}</span></td>
+                <td class="num">{{ money(order.totalCents) }}</td>
+                <td>
+                  <a class="btn btn--sm" [routerLink]="['/order/confirmation', order.id]" [attr.data-testid]="'order-open-' + order.id">
+                    Receipt
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="card__foot">
+        <button type="button" class="btn btn--sm" [disabled]="page() === 1" data-testid="orders-prev" (click)="go(page() - 1)">Previous</button>
+        <span class="hint" data-testid="orders-page-label">Page {{ page() }} of {{ pageCount() }}</span>
+        <button type="button" class="btn btn--sm" [disabled]="page() >= pageCount()" data-testid="orders-next" (click)="go(page() + 1)">Next</button>
+      </div>
+    }
+  </div>
+</div>

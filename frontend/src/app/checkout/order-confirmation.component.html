@@ -1,0 +1,43 @@
+<div class="page" data-testid="order-confirmation-page">
+  @if (reconciling()) {
+    <div class="card state" data-testid="confirmation-pending">
+      <span class="spinner" aria-hidden="true"></span>
+      <h3>Finalising your order…</h3>
+      <p>
+        Your payment went through. We are waiting for Stripe to confirm it — this usually takes a
+        couple of seconds. Do not close this page.
+      </p>
+    </div>
+  } @else {
+    <div class="confirm">
+      <span class="badge badge--success" data-testid="confirmation-badge">Payment received</span>
+      <h1>Thanks — your order is in production queue</h1>
+      <p class="hint">A confirmation email with your receipt is on its way to your inbox.</p>
+
+      <div class="card" style="margin-top: var(--space-5); text-align: left">
+        <dl>
+          <div class="kv"><dt>Order number</dt><dd class="mono" data-testid="order-number">{{ order().orderNumber }}</dd></div>
+          <div class="kv"><dt>Confirmation number</dt><dd class="mono" data-testid="confirmation-number">{{ order().confirmationNumber }}</dd></div>
+          <div class="kv"><dt>Quote</dt><dd class="mono">{{ order().quoteReference }}</dd></div>
+          <div class="kv"><dt>Material</dt><dd>{{ order().materialName }}</dd></div>
+          <div class="kv"><dt>Quantity</dt><dd>{{ order().quantity }}</dd></div>
+          <div class="kv"><dt>Shipping</dt><dd>{{ order().shippingMethod }}</dd></div>
+          <div class="kv"><dt>Subtotal</dt><dd>{{ money(order().subtotalCents) }}</dd></div>
+          <div class="kv"><dt>Shipping cost</dt><dd>{{ money(order().shippingCents) }}</dd></div>
+        </dl>
+        <div class="kv" style="border-top: 1px solid var(--border-subtle); padding-top: var(--space-3)">
+          <dt><strong>Total paid</strong></dt>
+          <dd><strong data-testid="order-total">{{ money(order().totalCents) }}</strong></dd>
+        </div>
+      </div>
+
+      <div class="row" style="justify-content: center; margin-top: var(--space-5)">
+        <a class="btn btn--primary" routerLink="/orders" data-testid="confirmation-orders">View my orders</a>
+        <button type="button" class="btn" data-testid="confirmation-receipt" (click)="downloadReceipt()">
+          Download receipt
+        </button>
+        <a class="btn btn--ghost" routerLink="/quote/new/upload">Start another quote</a>
+      </div>
+    </div>
+  }
+</div>

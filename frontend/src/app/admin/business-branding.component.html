@@ -1,0 +1,38 @@
+<div class="card" data-testid="business-branding">
+  <h2>Branding</h2>
+  <p class="hint">These values are public — they appear on the sign-in screen, the app header and every receipt.</p>
+
+  <div class="form-grid" style="margin-top: var(--space-4)">
+    <div class="field field--wide">
+      <label for="b-name">Company name</label>
+      <input id="b-name" type="text" data-testid="branding-name" [(ngModel)]="companyName" (ngModelChange)="apply()" />
+    </div>
+    <div class="field field--wide">
+      <label for="b-tagline">Tagline</label>
+      <input id="b-tagline" type="text" data-testid="branding-tagline" [(ngModel)]="tagline" (ngModelChange)="apply()" />
+    </div>
+    <div class="field">
+      <label for="b-initials">Logo initials</label>
+      <input id="b-initials" type="text" maxlength="3" data-testid="branding-initials" [(ngModel)]="initials" (ngModelChange)="apply()" />
+    </div>
+    <div class="field">
+      <label for="b-primary">Primary colour</label>
+      <input id="b-primary" type="color" class="color" data-testid="branding-primary" [(ngModel)]="primary" (ngModelChange)="apply()" />
+      <span class="hint mono">{{ primary() }}</span>
+    </div>
+    <div class="field">
+      <label for="b-accent">Accent colour</label>
+      <input id="b-accent" type="color" class="color" data-testid="branding-accent" [(ngModel)]="accent" (ngModelChange)="apply()" />
+      <span class="hint mono">{{ accent() }}</span>
+    </div>
+  </div>
+
+  <p class="alert alert--info" style="margin-top: var(--space-4)">
+    Colour changes apply live across the whole app so you can check contrast before saving.
+  </p>
+
+  <div class="row" style="margin-top: var(--space-4)">
+    <button type="button" class="btn btn--primary" data-testid="branding-save" (click)="apply()">Save branding</button>
+    <button type="button" class="btn" data-testid="branding-reset" (click)="reset()">Reset to defaults</button>
+  </div>
+</div>

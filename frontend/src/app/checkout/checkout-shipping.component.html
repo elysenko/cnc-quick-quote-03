@@ -1,0 +1,124 @@
+<div class="page" data-testid="checkout-shipping-page">
+  <div class="page-head">
+    <div>
+      <a class="btn--link" [routerLink]="['/checkout', quoteId(), 'review']" data-testid="shipping-back">← Back to review</a>
+      <h1>Shipping &amp; payment</h1>
+    </div>
+  </div>
+
+  <div class="checkout__steps">
+    <span class="checkout__step">1 · Review</span>
+    <span class="checkout__step is-active">2 · Shipping</span>
+    <span class="checkout__step">3 · Payment</span>
+  </div>
+
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <h2>Delivery address</h2>
+        <div class="address-grid">
+          <div class="field field--wide">
+            <label for="ship-name">Recipient</label>
+            <input id="ship-name" type="text" autocomplete="name" data-testid="ship-name" [(ngModel)]="recipient" />
+          </div>
+          <div class="field field--wide">
+            <label for="ship-line1">Street address</label>
+            <input id="ship-line1" type="text" autocomplete="address-line1" data-testid="ship-line1" [(ngModel)]="line1" />
+          </div>
+          <div class="field">
+            <label for="ship-city">City</label>
+            <input id="ship-city" type="text" autocomplete="address-level2" data-testid="ship-city" [(ngModel)]="city" />
+          </div>
+          <div class="field">
+            <label for="ship-state">State</label>
+            <input id="ship-state" type="text" autocomplete="address-level1" data-testid="ship-state" [(ngModel)]="state" />
+          </div>
+          <div class="field">
+            <label for="ship-zip">ZIP</label>
+            <input id="ship-zip" type="text" inputmode="numeric" autocomplete="postal-code" data-testid="ship-zip" [(ngModel)]="zip" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Shipping method</h2>
+
+        @if (methods().length === 0) {
+          <div class="alert alert--warn" data-testid="shipping-none-active" role="status">
+            <div>
+              <strong>No shipping methods are currently available.</strong>
+              <p style="margin: var(--space-1) 0 0">
+                We can still take this order — contact the shop at
+                <a class="btn--link" href="mailto:orders&#64;fieldworks-fab.example">orders&#64;fieldworks-fab.example</a>
+                and we will arrange delivery or pickup manually.
+              </p>
+            </div>
+          </div>
+        } @else {
+          <div class="stack" role="radiogroup" aria-label="Shipping method">
+            @for (method of methods(); track method.id) {
+              <label
+                class="ship-option"
+                [class.is-selected]="method.id === selectedId()"
+                [attr.data-testid]="'ship-method-' + method.id"
+              >
+                <input
+                  type="radio"
+                  name="shipping"
+                  [value]="method.id"
+                  [checked]="method.id === selectedId()"
+                  (change)="selectedId.set(method.id)"
+                />
+                <span class="ship-option__body">
+                  <span class="ship-option__name">{{ method.name }}</span>
+                  <span class="ship-option__desc">
+                    {{ method.description }} · {{ money(method.baseRateCents) }} base +
+                    {{ money(method.perSheetRateCents) }} × {{ sheetCount() }} sheets
+                  </span>
+                </span>
+                <span class="ship-option__price">{{ money(rateFor(method)) }}</span>
+              </label>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2>Order total</h2>
+        <dl>
+          <div class="kv"><dt>Quote subtotal</dt><dd>{{ money(subtotalCents()) }}</dd></div>
+          <div class="kv"><dt>Shipping</dt><dd data-testid="shipping-cost">{{ money(shippingCents()) }}</dd></div>
+        </dl>
+        <div class="kv" style="border-top: 1px solid var(--border-subtle); padding-top: var(--space-3)">
+          <dt><strong>Total due</strong></dt>
+          <dd data-testid="shipping-total"><strong>{{ money(subtotalCents() + shippingCents()) }}</strong></dd>
+        </div>
+      </div>
+
+      @if (payError()) {
+        <p class="alert alert--error" data-testid="pay-error" role="alert">
+          {{ payError() }}
+          <button type="button" class="btn btn--sm" style="margin-left: var(--space-3)" (click)="pay()">Retry</button>
+        </p>
+      }
+
+      <div class="card pay-actions">
+        <p class="hint">
+          You will be redirected to Stripe Checkout to enter your card. We never see or store your
+          card details.
+        </p>
+        <button
+          type="button"
+          class="btn btn--primary btn--block"
+          data-testid="pay-now"
+          [disabled]="methods().length === 0 || paying()"
+          (click)="pay()"
+        >
+          {{ paying() ? 'Redirecting to Stripe…' : 'Pay ' + money(subtotalCents() + shippingCents()) }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

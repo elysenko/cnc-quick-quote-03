@@ -1,0 +1,20 @@
+<div class="page" data-testid="admin-layout">
+  <div class="page-head">
+    <div>
+      <h1>Admin console</h1>
+      <p>Configure the shop: services, materials, pricing, machine limits, business details and orders.</p>
+    </div>
+  </div>
+
+  <nav class="admin__nav" aria-label="Admin sections">
+    @for (item of sections; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active" [attr.data-testid]="'admin-nav-' + item.id">
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+
+  <div style="margin-top: var(--space-5)">
+    <router-outlet />
+  </div>
+</div>

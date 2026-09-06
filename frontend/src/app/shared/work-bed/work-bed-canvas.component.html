@@ -1,0 +1,48 @@
+<figure class="workbed" data-testid="work-bed">
+  <figcaption class="workbed__head">
+    <div>
+      <h3>{{ heading() }}</h3>
+      <p class="workbed__meta mono">
+        Bed {{ bedWidthIn() }}&Prime; &times; {{ bedHeightIn() }}&Prime; &middot; sheet
+        {{ nesting().sheetWidthIn }}&Prime; &times; {{ nesting().sheetHeightIn }}&Prime; &middot;
+        {{ nesting().perSheet }} parts/sheet &middot;
+        {{ (nesting().utilization * 100).toFixed(1) }}% used
+      </p>
+    </div>
+    <div class="row">
+      @if (nesting().sheetCount > 1) {
+        <label class="visually-hidden" for="sheet-picker">Sheet</label>
+        <select
+          id="sheet-picker"
+          class="workbed__sheet-select"
+          data-testid="work-bed-sheet"
+          [value]="activeSheet()"
+          (change)="selectSheet($event)"
+        >
+          @for (index of sheetIndexes(); track index) {
+            <option [value]="index">Sheet {{ index + 1 }} of {{ nesting().sheetCount }}</option>
+          }
+        </select>
+      }
+      <button
+        type="button"
+        class="btn btn--accent btn--sm"
+        data-testid="print-bed-toggle"
+        (click)="togglePrint()"
+      >
+        {{ running() ? 'Stop and reset' : 'Print bed' }}
+      </button>
+    </div>
+  </figcaption>
+
+  <div class="workbed__canvas-wrap" #wrap>
+    <canvas #canvas class="workbed__canvas" data-testid="work-bed-canvas"></canvas>
+  </div>
+
+  <ul class="workbed__legend">
+    <li><span class="swatch swatch--cut"></span> Cut path</li>
+    <li><span class="swatch swatch--done"></span> Completed</li>
+    <li><span class="swatch swatch--bend"></span> Bend line</li>
+    <li class="mono">{{ cutLengthLabel() }}</li>
+  </ul>
+</figure>

@@ -1,0 +1,45 @@
+<div class="page" data-testid="checkout-review-page">
+  <div class="page-head">
+    <div>
+      <a class="btn--link" [routerLink]="['/quotes', quoteId()]" data-testid="checkout-back">← Back to quote</a>
+      <h1>Review your order</h1>
+    </div>
+  </div>
+
+  <div class="checkout__steps">
+    <span class="checkout__step is-active">1 · Review</span>
+    <span class="checkout__step">2 · Shipping</span>
+    <span class="checkout__step">3 · Payment</span>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <h2>What you are ordering</h2>
+      <dl>
+        <div class="kv"><dt>Quote</dt><dd class="mono">{{ reference() }}</dd></div>
+        <div class="kv"><dt>Drawing</dt><dd>{{ filename() }}</dd></div>
+        <div class="kv"><dt>Material</dt><dd data-testid="review-material">{{ materialName() }}</dd></div>
+        <div class="kv"><dt>Quantity</dt><dd data-testid="review-quantity">{{ quantity() }}</dd></div>
+        <div class="kv"><dt>Bends per part</dt><dd>{{ bendCount() }}</dd></div>
+        <div class="kv"><dt>Sheets</dt><dd>{{ sheetCount() }}</dd></div>
+      </dl>
+      <p class="alert alert--info" style="margin-top: var(--space-4)">
+        Production starts once payment clears. Lead time is quoted on your confirmation email.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Total</h2>
+      <dl>
+        <div class="kv"><dt>Quote total</dt><dd data-testid="review-total">{{ money(totalCents()) }}</dd></div>
+        <div class="kv"><dt>Shipping</dt><dd>Chosen next</dd></div>
+      </dl>
+      <a
+        class="btn btn--primary btn--block"
+        style="margin-top: var(--space-4)"
+        [routerLink]="['/checkout', quoteId(), 'shipping']"
+        data-testid="checkout-continue"
+      >Continue to shipping</a>
+    </div>
+  </div>
+</div>

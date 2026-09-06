@@ -1,0 +1,54 @@
+<div class="card card--flush" data-testid="business-shipping">
+  <div class="card__head">
+    <div>
+      <h2>Shipping methods</h2>
+      <p class="hint" style="margin: 0">
+        Customers see active methods only. If none are active, checkout shows a contact-us message
+        instead of blocking the order.
+      </p>
+    </div>
+    <button type="button" class="btn btn--primary btn--sm" data-testid="shipping-add" (click)="add()">Add method</button>
+  </div>
+
+  @if (methods().length === 0) {
+    <div class="state" data-testid="shipping-methods-empty">
+      <h3>No shipping methods configured</h3>
+      <p>Add at least one so customers can complete checkout.</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Name</th><th>Description</th><th class="num">Base rate</th>
+            <th class="num">Per sheet</th><th>Status</th><th><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (method of methods(); track method.id) {
+            <tr [attr.data-testid]="'shipping-row-' + method.id">
+              <td>
+                <input type="text" [value]="method.name" [attr.data-testid]="'shipping-name-' + method.id"
+                       (input)="rename(method.id, $event)" aria-label="Method name" />
+              </td>
+              <td>{{ method.description }}</td>
+              <td class="num">{{ money(method.baseRateCents) }}</td>
+              <td class="num">{{ money(method.perSheetRateCents) }}</td>
+              <td>
+                <span [class]="'badge ' + (method.active ? 'badge--success' : '')">
+                  {{ method.active ? 'Active' : 'Disabled' }}
+                </span>
+              </td>
+              <td>
+                <button type="button" class="btn btn--sm" [attr.data-testid]="'shipping-toggle-' + method.id"
+                        (click)="toggle(method.id)">
+                  {{ method.active ? 'Disable' : 'Enable' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

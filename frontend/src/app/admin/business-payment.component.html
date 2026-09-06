@@ -1,0 +1,61 @@
+<div class="stack" data-testid="business-payment">
+  <div class="sandbox">
+    <div class="sandbox__body">
+      <strong>Sandbox mode {{ sandbox() ? 'on' : 'off' }}</strong>
+      <p class="hint" style="margin: var(--space-1) 0 0">
+        In sandbox mode, checkout uses Stripe test keys — card 4242 4242 4242 4242 succeeds and
+        4000 0000 0000 0002 is declined. No real money moves.
+      </p>
+    </div>
+    <label class="switch">
+      <input type="checkbox" data-testid="payment-sandbox" [checked]="sandbox()" (change)="toggleSandbox()"
+             aria-label="Sandbox mode" />
+      <span class="switch__track"></span>
+      <span class="switch__thumb"></span>
+    </label>
+  </div>
+
+  <div class="card">
+    <h2>Stripe credentials</h2>
+    <p class="hint">
+      Stored encrypted. Existing values are never returned in plaintext — enter a new value to
+      replace one.
+    </p>
+
+    <div class="stack" style="margin-top: var(--space-4)">
+      <div class="secret-row">
+        <div class="field">
+          <label for="pay-secret">Secret key</label>
+          <input id="pay-secret" type="password" autocomplete="off" placeholder="sk_live_…"
+                 data-testid="payment-secret-key" [(ngModel)]="secretKey" />
+        </div>
+        <span class="mask" data-testid="payment-secret-masked">Current: {{ maskedSecret() }}</span>
+      </div>
+
+      <div class="secret-row">
+        <div class="field">
+          <label for="pay-webhook">Webhook signing secret</label>
+          <input id="pay-webhook" type="password" autocomplete="off" placeholder="whsec_…"
+                 data-testid="payment-webhook-secret" [(ngModel)]="webhookSecret" />
+        </div>
+        <span class="mask" data-testid="payment-webhook-masked">Current: {{ maskedWebhook() }}</span>
+      </div>
+
+      <div class="field">
+        <label for="pay-publishable">Publishable key</label>
+        <input id="pay-publishable" type="text" autocomplete="off" data-testid="payment-publishable-key"
+               [(ngModel)]="publishableKey" />
+        <span class="hint">Safe to expose — used by the hosted checkout page.</span>
+      </div>
+    </div>
+
+    @if (saved()) {
+      <p class="alert alert--success" style="margin-top: var(--space-4)" data-testid="payment-saved">
+        Payment settings saved. Secrets were encrypted before storage.
+      </p>
+    }
+    <button type="button" class="btn btn--primary" style="margin-top: var(--space-4)" data-testid="payment-save" (click)="save()">
+      Save payment settings
+    </button>
+  </div>
+</div>

@@ -1,0 +1,73 @@
+<div class="stack" data-testid="upload-step">
+  <div class="card">
+    <h2>Upload your drawing</h2>
+    <p class="hint">
+      DXF files only, up to {{ maxUploadMb() }} MB. We read the units from the file's
+      <span class="mono">$INSUNITS</span> header and normalise everything to inches — check the
+      bounding box below before you continue.
+    </p>
+
+    @if (parseError()) {
+      <p class="alert alert--error" data-testid="upload-parse-error" role="alert">{{ parseError() }}</p>
+    }
+
+    @if (uploading()) {
+      <div class="stack" data-testid="upload-progress">
+        <div class="progress"><div class="progress__bar" [style.width.%]="progress()"></div></div>
+        <p class="hint">Uploading and parsing… {{ progress() }}%</p>
+      </div>
+    } @else {
+      <div
+        class="dropzone"
+        [class.is-over]="dragOver()"
+        data-testid="upload-dropzone"
+        role="button"
+        tabindex="0"
+        (click)="simulateUpload()"
+        (keydown.enter)="simulateUpload()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="dragOver.set(false)"
+        (drop)="onDrop($event)"
+      >
+        <span class="dropzone__glyph" aria-hidden="true">⤓</span>
+        <span class="dropzone__title">Drop a DXF here, or tap to browse</span>
+        <span class="hint">Allowed extensions: {{ allowedExtensions().join(', ') }}</span>
+      </div>
+    }
+  </div>
+
+  @if (drawing(); as file) {
+    <div class="card">
+      <div class="card__head" style="padding: 0 0 var(--space-3); border: none">
+        <h3>{{ file.filename }}</h3>
+        <span class="badge badge--success" data-testid="upload-parsed">Parsed</span>
+      </div>
+      <dl class="facts">
+        <div class="fact"><dt>Detected units</dt><dd data-testid="fact-units">{{ file.detectedUnits }}</dd></div>
+        <div class="fact"><dt>Bounding box</dt><dd data-testid="fact-bbox">{{ file.bboxWIn }}&Prime; × {{ file.bboxHIn }}&Prime;</dd></div>
+        <div class="fact"><dt>Cut length</dt><dd data-testid="fact-cut-length">{{ file.cutLengthIn }}&Prime;</dd></div>
+        <div class="fact"><dt>Entities</dt><dd>{{ file.entityCount }}</dd></div>
+        <div class="fact"><dt>File size</dt><dd>{{ (file.sizeBytes / 1024).toFixed(0) }} KB</dd></div>
+      </dl>
+      <p class="alert alert--info" style="margin-top: var(--space-4)" data-testid="units-warning">
+        Units were read as <strong>{{ file.detectedUnits }}</strong>. If that bounding box does not
+        match your part, re-export the drawing with explicit units before quoting.
+      </p>
+    </div>
+  } @else {
+    <div class="card state" data-testid="upload-empty">
+      <h3>No drawing yet</h3>
+      <p>Once a file is parsed you will see its detected units, bounding box and total cut length here.</p>
+    </div>
+  }
+
+  <div class="step__actions">
+    <a class="btn" routerLink="/quotes" data-testid="upload-back">Back to quotes</a>
+    <a
+      class="btn btn--primary"
+      routerLink="/quote/new/material"
+      data-testid="upload-continue"
+      [class.is-disabled]="!drawing()"
+    >Continue to material</a>
+  </div>
+</div>

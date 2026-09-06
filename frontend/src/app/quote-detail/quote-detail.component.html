@@ -1,0 +1,99 @@
+<div class="page" data-testid="quote-detail-page">
+  <div class="page-head">
+    <div>
+      <a class="btn--link" routerLink="/quotes" data-testid="detail-back">← All quotes</a>
+      <h1 data-testid="detail-reference">{{ quote().reference }}</h1>
+      <p>
+        {{ quote().filename }} · {{ quote().materialName }} · quantity {{ quote().quantity }} ·
+        generated {{ quote().createdAt | slice: 0 : 10 }}
+      </p>
+    </div>
+    <div class="row">
+      <span [class]="'badge ' + statusClass()">{{ quote().status }}</span>
+      <button type="button" class="btn btn--primary" data-testid="detail-order" (click)="openConfirm()">
+        Order this quote
+      </button>
+    </div>
+  </div>
+
+  <nav class="tabs" aria-label="Quote panels">
+    <a
+      [routerLink]="[]"
+      [queryParams]="{ panel: 'breakdown' }"
+      queryParamsHandling="merge"
+      [class.active]="panel() === 'breakdown'"
+      data-testid="panel-tab-breakdown"
+    >Cost breakdown</a>
+    <a
+      [routerLink]="[]"
+      [queryParams]="{ panel: 'nesting' }"
+      queryParamsHandling="merge"
+      [class.active]="panel() === 'nesting'"
+      data-testid="panel-tab-nesting"
+    >Nesting &amp; cut path</a>
+  </nav>
+
+  <div class="detail" style="margin-top: var(--space-4)">
+    @if (panel() === 'breakdown') {
+      <div class="split" data-testid="panel-breakdown">
+        <div class="card">
+          <h2>Cost breakdown</h2>
+          <app-cost-breakdown [breakdown]="breakdown()" />
+        </div>
+        <div class="card">
+          <h2>Job facts</h2>
+          <dl>
+            <div class="kv"><dt>Cut length per part</dt><dd>{{ quote().cutLengthIn }}&Prime;</dd></div>
+            <div class="kv"><dt>Total cut length</dt><dd>{{ (quote().cutLengthIn * quote().quantity / 12).toFixed(2) }} ft</dd></div>
+            <div class="kv"><dt>Bends per part</dt><dd>{{ quote().bendCount }}</dd></div>
+            <div class="kv"><dt>Sheets required</dt><dd>{{ quote().sheetCount }}</dd></div>
+            <div class="kv"><dt>Sheet utilisation</dt><dd>{{ (quote().utilization * 100).toFixed(1) }}%</dd></div>
+          </dl>
+          <p class="alert alert--info" style="margin-top: var(--space-3)">
+            This price was snapshotted when the quote was generated. Rate changes made since then
+            do not apply to it.
+          </p>
+        </div>
+      </div>
+    } @else {
+      <div class="stack" data-testid="panel-nesting">
+        <app-work-bed-canvas
+          heading="Work bed — nested sheet"
+          [bedWidthIn]="bedWidthIn()"
+          [bedHeightIn]="bedHeightIn()"
+          [nesting]="nesting()"
+          [polylines]="polylines()"
+          [bends]="bends()"
+        />
+        <div class="card">
+          <h2>How this sheet was nested</h2>
+          <p class="hint">
+            Parts are packed top-left in a {{ nesting().cols }} × {{ nesting().rows }} grid with a
+            {{ nesting().spacingIn }}&Prime; gap and a {{ nesting().marginIn }}&Prime; edge margin,
+            filling {{ nesting().perSheet }} parts per sheet across {{ nesting().sheetCount }} sheets.
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (modal() === 'confirm-order') {
+    <app-modal title="Order this quote?" (dismiss)="closeModal()">
+      <p>
+        You are about to order <strong>{{ quote().quantity }}</strong> ×
+        <strong>{{ quote().filename }}</strong> in {{ quote().materialName }}.
+      </p>
+      <dl>
+        <div class="kv"><dt>Quote total</dt><dd>{{ money(quote().totalCents) }}</dd></div>
+        <div class="kv"><dt>Sheets</dt><dd>{{ quote().sheetCount }}</dd></div>
+      </dl>
+      <p class="hint">Shipping is chosen on the next screen; payment is handled by Stripe.</p>
+      <ng-container modal-actions>
+        <button type="button" class="btn" data-testid="confirm-cancel" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn btn--primary" data-testid="confirm-continue" (click)="toCheckout()">
+          Continue to checkout
+        </button>
+      </ng-container>
+    </app-modal>
+  }
+</div>

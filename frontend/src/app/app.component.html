@@ -1,0 +1,56 @@
+<div class="shell" data-testid="app-ready">
+  @if (chromeVisible()) {
+    <header class="shell__header">
+      <a class="brand" routerLink="/quotes" data-testid="brand-link">
+        <span class="brand__mark" aria-hidden="true">{{ branding().logoInitials }}</span>
+        <span class="brand__text">
+          <strong>{{ branding().companyName }}</strong>
+          <small>{{ branding().tagline }}</small>
+        </span>
+      </a>
+
+      @if (!isHandset()) {
+        <nav class="shell__nav" aria-label="Primary">
+          @for (item of visibleNav(); track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [attr.data-testid]="'nav-' + item.id"
+            >{{ item.label }}</a>
+          }
+        </nav>
+      }
+
+      <div class="shell__actions">
+        <a class="btn btn--primary btn--sm" routerLink="/quote/new/upload" data-testid="nav-new-quote">
+          New quote
+        </a>
+        <button type="button" class="btn btn--ghost btn--sm" data-testid="nav-sign-out" (click)="signOut()">
+          Sign out
+        </button>
+      </div>
+    </header>
+  }
+
+  <main class="shell__main">
+    <router-outlet />
+  </main>
+
+  @if (chromeVisible()) {
+    <!-- 5 or fewer destinations, so a bottom tab bar replaces the header nav on phones. -->
+    @if (isHandset()) {
+      <nav class="tabbar" aria-label="Primary mobile">
+        @for (item of visibleTabs(); track item.path) {
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [attr.data-testid]="'tab-' + item.id"
+          >
+            <span class="tabbar__icon" aria-hidden="true">{{ item.glyph }}</span>
+            <span class="tabbar__label">{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+    }
+  }
+</div>
