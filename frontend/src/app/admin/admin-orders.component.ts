@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { QueryParamStateService } from '../core/query-param-state.service';
+import { ApiService } from '../core/api.service';
 import { Order, OrderStatus, centsToUsd } from '../core/models';
 
 const STATUSES = ['all', 'paid', 'in_production', 'shipped', 'cancelled'] as const;
@@ -14,14 +15,9 @@ type StatusFilter = (typeof STATUSES)[number];
 })
 export class AdminOrdersComponent {
   private readonly params = inject(QueryParamStateService);
+  private readonly api = inject(ApiService);
 
-  readonly orders = signal<Order[]>([
-    { id: 'ord_9f21', orderNumber: 'ORD-2026-0912', confirmationNumber: 'CNF-7QX4-2M8D', customerName: 'Dana Ortiz', quoteReference: 'Q-2026-2418', materialName: 'Stainless 304 — 16 ga', quantity: 24, shippingMethod: 'Ground freight', subtotalCents: 41_866, shippingCents: 2_690, totalCents: 44_556, status: 'paid', placedAt: '2026-09-05T15:41:00Z' },
-    { id: 'ord_9e88', orderNumber: 'ORD-2026-0908', confirmationNumber: 'CNF-4KD9-7T1P', customerName: 'Marcus Bell', quoteReference: 'Q-2026-2417', materialName: 'Mild steel — 14 ga', quantity: 120, shippingMethod: 'Express 2-day', subtotalCents: 62_140, shippingCents: 7_750, totalCents: 69_890, status: 'in_production', placedAt: '2026-09-03T10:11:00Z' },
-    { id: 'ord_9d02', orderNumber: 'ORD-2026-0891', confirmationNumber: 'CNF-2WM6-9B3H', customerName: 'Priya Raman', quoteReference: 'Q-2026-2414', materialName: 'Aluminium 6061 — 0.090"', quantity: 32, shippingMethod: 'Ground freight', subtotalCents: 128_420, shippingCents: 3_530, totalCents: 131_950, status: 'shipped', placedAt: '2026-08-27T09:20:00Z' },
-    { id: 'ord_9c47', orderNumber: 'ORD-2026-0874', confirmationNumber: 'CNF-8HN2-5Q7R', customerName: 'Tomas Lindqvist', quoteReference: 'Q-2026-2409', materialName: 'Stainless 304 — 16 ga', quantity: 6, shippingMethod: 'Shop pickup', subtotalCents: 18_940, shippingCents: 0, totalCents: 18_940, status: 'shipped', placedAt: '2026-08-19T14:02:00Z' },
-    { id: 'ord_9b13', orderNumber: 'ORD-2026-0852', confirmationNumber: 'CNF-6RJ8-3L4V', customerName: 'Alina Novak', quoteReference: 'Q-2026-2401', materialName: 'Mild steel — 14 ga', quantity: 250, shippingMethod: 'Ground freight', subtotalCents: 214_600, shippingCents: 5_210, totalCents: 219_810, status: 'cancelled', placedAt: '2026-08-11T11:45:00Z' },
-  ]);
+  readonly orders = signal<Order[]>([]);
 
   readonly status = this.params.read<StatusFilter>('status', 'all', STATUSES);
   readonly search = this.params.read<string>('q', '');
@@ -39,6 +35,19 @@ export class AdminOrdersComponent {
       return statusOk && searchOk;
     });
   });
+
+  constructor() {
+    void this.load();
+  }
+
+  private async load(): Promise<void> {
+    try {
+      this.orders.set(await this.api.adminOrders());
+    } catch {
+      // No orders to show; the template renders its own empty state.
+      this.orders.set([]);
+    }
+  }
 
   setStatus(event: Event): void {
     this.params.patch({ status: (event.target as HTMLSelectElement).value });

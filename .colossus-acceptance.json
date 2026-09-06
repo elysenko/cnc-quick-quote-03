@@ -1,5 +1,13 @@
 {
   "ready_testid": "app-ready",
-  "expect_text": [],
-  "reject_signatures": ["home-title\">Users<", "Loading...", "Failed to load users."]
+  "expect_text": [
+    "quote a laser-cut part in under a minute",
+    "live work-bed preview with the laser head"
+  ],
+  "reject_signatures": [
+    "home-title\">Users<",
+    "Loading...",
+    "Failed to load users.",
+    "Skip login — Demo Mode"
+  ]
 }

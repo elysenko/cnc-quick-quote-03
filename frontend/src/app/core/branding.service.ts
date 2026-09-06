@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { ApiService } from './api.service';
 
 export interface PublicBusiness {
   companyName: string;
@@ -27,8 +28,29 @@ const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 export class BrandingService {
   readonly branding = signal<PublicBusiness>(DEFAULTS);
 
+  private readonly api = inject(ApiService);
+
   constructor() {
+    // Defaults paint immediately; the fetch only refines them, so first paint is
+    // never blocked and a branding outage never blanks the shell.
     this.apply(this.branding());
+    void this.refresh();
+  }
+
+  /** Failure-tolerant: an unreachable API leaves the defaults in place. */
+  async refresh(): Promise<void> {
+    try {
+      const business = await this.api.publicBusiness();
+      this.update({
+        ...(business.companyName ? { companyName: business.companyName } : {}),
+        ...(business.tagline ? { tagline: business.tagline } : {}),
+        ...(business.logoInitials ? { logoInitials: business.logoInitials } : {}),
+        ...(business.primaryColor ? { primaryColor: business.primaryColor } : {}),
+        ...(business.accentColor ? { accentColor: business.accentColor } : {}),
+      });
+    } catch {
+      /* keep defaults */
+    }
   }
 
   update(patch: Partial<PublicBusiness>): void {

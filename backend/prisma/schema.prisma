@@ -11,11 +11,17 @@ model User {
   id           String   @id @default(uuid())
   email        String   @unique
   name         String?
+  company      String?
   /// bcryptjs hash (BCRYPT_ROUNDS in prisma/seed/seed.js and the auth service). Never store plaintext.
   passwordHash String
   role         Role     @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  drawings      Drawing[]
+  quotes        Quote[]
+  orders        Order[]
 }
 
 /// One value per role the stack contract declares (stacks/combos/enterprise.json auth.roles).
@@ -40,4 +46,178 @@ model ColossusAccount {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("colossus_accounts")
+}
+
+// ---------------------------------------------------------------------------
+// CNC Quick Quote domain
+// ---------------------------------------------------------------------------
+
+/// Rotating refresh token. The raw token is never stored — only its SHA-256 hash.
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  jti       String    @unique
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// Sheet stock a customer can quote against. Money is integer cents.
+model Material {
+  id                String   @id @default(uuid())
+  name              String
+  thicknessIn       Float    @map("thickness_in")
+  sheetWidthIn      Float    @map("sheet_width_in")
+  sheetHeightIn     Float    @map("sheet_height_in")
+  perSheetCostCents Int      @map("per_sheet_cost_cents")
+  costMultiplier    Float    @default(1) @map("cost_multiplier")
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  quotes Quote[]
+
+  @@map("materials")
+}
+
+/// Delivery option. Rate = baseRateCents + perSheetRateCents * sheetCount.
+model ShippingMethod {
+  id                String   @id @default(uuid())
+  name              String
+  description       String   @default("")
+  baseRateCents     Int      @default(0) @map("base_rate_cents")
+  perSheetRateCents Int      @default(0) @map("per_sheet_rate_cents")
+  active            Boolean  @default(true)
+  sortOrder         Int      @default(0) @map("sort_order")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  orders Order[]
+
+  @@map("shipping_methods")
+}
+
+/// An uploaded DXF plus the geometry extracted from it. The object itself lives
+/// in object storage under `storageKey`; bends never rewrite it.
+model Drawing {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filename      String
+  storageKey    String   @map("storage_key")
+  sizeBytes     Int      @map("size_bytes")
+  detectedUnits String   @map("detected_units")
+  bboxWIn       Float    @map("bbox_w_in")
+  bboxHIn       Float    @map("bbox_h_in")
+  cutLengthIn   Float    @map("cut_length_in")
+  entityCount   Int      @default(0) @map("entity_count")
+  parsedJson    Json     @map("parsed_json")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  bends  BendLine[]
+  quotes Quote[]
+
+  @@index([userId, createdAt])
+  @@map("drawings")
+}
+
+/// A fold line drawn over the parsed outline. angleDeg is clamped to 0..180.
+model BendLine {
+  id        String   @id @default(uuid())
+  drawingId String   @map("drawing_id")
+  drawing   Drawing  @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  x1        Float
+  y1        Float
+  x2        Float
+  y2        Float
+  angleDeg  Float    @map("angle_deg")
+  direction String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([drawingId])
+  @@map("bend_lines")
+}
+
+/// Immutable priced quote. `pricingSnapshotJson` freezes the pricing document that
+/// produced `totalCents`, so later admin rate changes never re-price an old quote.
+model Quote {
+  id                  String   @id @default(uuid())
+  reference           String   @unique
+  userId              String   @map("user_id")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  drawingId           String   @map("drawing_id")
+  drawing             Drawing  @relation(fields: [drawingId], references: [id])
+  materialId          String   @map("material_id")
+  material            Material @relation(fields: [materialId], references: [id])
+  materialName        String   @map("material_name")
+  filename            String
+  quantity            Int
+  cutLengthIn         Float    @map("cut_length_in")
+  bendCount           Int      @map("bend_count")
+  sheetCount          Int      @map("sheet_count")
+  utilization         Float
+  nestingJson         Json     @map("nesting_json")
+  pricingSnapshotJson Json     @map("pricing_snapshot_json")
+  breakdownJson       Json     @map("breakdown_json")
+  totalCents          Int      @map("total_cents")
+  status              String   @default("ready")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  orders Order[]
+
+  @@index([userId, createdAt])
+  @@map("quotes")
+}
+
+/// A paid order. Created by the Stripe webhook or by the reconcile endpoint —
+/// `stripeSessionId` is unique so both paths converge on exactly one row.
+model Order {
+  id                  String          @id @default(uuid())
+  userId              String          @map("user_id")
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quoteId             String          @map("quote_id")
+  quote               Quote           @relation(fields: [quoteId], references: [id])
+  orderNumber         String          @unique @map("order_number")
+  confirmationNumber  String          @unique @map("confirmation_number")
+  stripeSessionId     String          @unique @map("stripe_session_id")
+  stripePaymentIntent String?         @map("stripe_payment_intent")
+  shippingMethodId    String?         @map("shipping_method_id")
+  shippingMethod      ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
+  shippingMethodName  String          @default("") @map("shipping_method_name")
+  shippingAddressJson Json            @map("shipping_address_json")
+  subtotalCents       Int             @map("subtotal_cents")
+  shippingCents       Int             @map("shipping_cents")
+  totalCents          Int             @map("total_cents")
+  status              String          @default("paid")
+  createdAt           DateTime        @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("orders")
+}
+
+/// Processed Stripe events. The unique event id makes webhook replays no-ops.
+model WebhookEvent {
+  id            String   @id @default(uuid())
+  stripeEventId String   @unique @map("stripe_event_id")
+  type          String
+  payloadJson   Json     @map("payload_json")
+  processedAt   DateTime @default(now()) @map("processed_at")
+
+  @@map("webhook_events")
+}
+
+/// Key/value configuration: the pricing / machine / upload / business / payment
+/// documents (JSON strings) and admin-supplied integration credentials (encrypted).
+model SystemSetting {
+  key       String   @id
+  value     String
+  secret    Boolean  @default(false)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
 }

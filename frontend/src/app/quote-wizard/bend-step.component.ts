@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { BendEditorComponent } from '../shared/bend-editor/bend-editor.component';
 import { centsToUsd } from '../core/models';
-import { PART_HEIGHT_IN, PART_POLYLINES, PART_WIDTH_IN } from '../core/mock-geometry';
 import { QuoteDraftService } from './quote-draft.service';
 
 @Component({
@@ -16,12 +15,13 @@ import { QuoteDraftService } from './quote-draft.service';
 export class BendStepComponent {
   private readonly draft = inject(QuoteDraftService);
 
+  /** Two-way with the editor; the draft service persists each change to the server. */
   readonly bends = this.draft.bends;
   readonly quantity = this.draft.quantity;
   readonly costPerBendCents = this.draft.costPerBendCents;
   readonly money = centsToUsd;
 
-  readonly polylines = computed(() => this.draft.drawing()?.polylines ?? PART_POLYLINES);
-  readonly partWidthIn = computed(() => this.draft.drawing()?.bboxWIn ?? PART_WIDTH_IN);
-  readonly partHeightIn = computed(() => this.draft.drawing()?.bboxHIn ?? PART_HEIGHT_IN);
+  readonly polylines = computed(() => this.draft.drawing()?.polylines ?? []);
+  readonly partWidthIn = computed(() => this.draft.drawing()?.bboxWIn ?? 1);
+  readonly partHeightIn = computed(() => this.draft.drawing()?.bboxHIn ?? 1);
 }

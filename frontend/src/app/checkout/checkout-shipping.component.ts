@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { QueryParamStateService } from '../core/query-param-state.service';
-import { QuoteDraftService } from '../quote-wizard/quote-draft.service';
-import { ShippingMethod, centsToUsd } from '../core/models';
+import { RouterLink } from '@angular/router';
+import { ShippingOption, centsToUsd } from '../core/models';
+import { ApiService, apiErrorMessage, apiErrorStatus } from '../core/api.service';
 
 @Component({
   selector: 'app-checkout-shipping',
@@ -14,25 +13,12 @@ import { ShippingMethod, centsToUsd } from '../core/models';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CheckoutShippingComponent {
-  readonly quoteId = input<string>('q_2418');
+  readonly quoteId = input<string>('');
 
-  private readonly draft = inject(QuoteDraftService);
-  private readonly router = inject(Router);
-  private readonly params = inject(QueryParamStateService);
+  private readonly api = inject(ApiService);
 
-  /**
-   * The server answers 409 when no method is active. That contact-us state is a design
-   * the reviewer has to judge, so it gets a URL: ?methods=none.
-   */
-  private readonly methodsParam = this.params.read<'all' | 'none'>('methods', 'all', ['all', 'none']);
-
-  private readonly allMethods = signal<ShippingMethod[]>([
-    { id: 'ship_pickup', name: 'Shop pickup', description: 'Ready in 3 business days', baseRateCents: 0, perSheetRateCents: 0, active: true, sortOrder: 1 },
-    { id: 'ship_ground', name: 'Ground freight', description: 'Delivered in 4–6 business days', baseRateCents: 1_850, perSheetRateCents: 420, active: true, sortOrder: 2 },
-    { id: 'ship_express', name: 'Express 2-day', description: 'Delivered in 2 business days', baseRateCents: 4_900, perSheetRateCents: 950, active: true, sortOrder: 3 },
-  ]);
-
-  readonly methods = computed(() => (this.methodsParam() === 'none' ? [] : this.allMethods()));
+  /** Empty means the shop has no active delivery option — the template shows contact-us. */
+  readonly methods = signal<ShippingOption[]>([]);
 
   readonly recipient = signal('');
   readonly line1 = signal('');
@@ -40,30 +26,95 @@ export class CheckoutShippingComponent {
   readonly state = signal('');
   readonly zip = signal('');
 
-  readonly selectedId = signal('ship_ground');
+  readonly selectedId = signal('');
   readonly paying = signal(false);
   readonly payError = signal<string | null>(null);
   readonly money = centsToUsd;
 
-  readonly sheetCount = computed(() => this.draft.nesting().sheetCount);
-  readonly subtotalCents = computed(() => this.draft.breakdown().totalCents);
+  private readonly sheets = signal(0);
+  private readonly subtotal = signal(0);
+
+  readonly sheetCount = computed(() => this.sheets());
+  readonly subtotalCents = computed(() => this.subtotal());
 
   readonly shippingCents = computed(() => {
-    const method = this.methods().find((m) => m.id === this.selectedId());
+    const method = this.methods().find((option) => option.id === this.selectedId());
     return method ? this.rateFor(method) : 0;
   });
 
-  rateFor(method: ShippingMethod): number {
+  constructor() {
+    effect(() => {
+      const id = this.quoteId();
+      if (id) void this.load(id);
+    });
+  }
+
+  private async load(id: string): Promise<void> {
+    try {
+      const review = await this.api.checkoutReview(id);
+      this.sheets.set(review.sheetCount);
+      this.subtotal.set(review.totalCents);
+    } catch {
+      /* the totals row simply stays at zero */
+    }
+    try {
+      const options = await this.api.shippingOptions(id);
+      this.methods.set(options);
+      if (options.length > 0 && !options.some((option) => option.id === this.selectedId())) {
+        this.selectedId.set(options[0].id);
+      }
+    } catch (error) {
+      // 409 is the documented "no active methods" answer, and the template already
+      // renders that as a contact-us state driven by an empty list.
+      this.methods.set([]);
+      if (apiErrorStatus(error) !== 409) {
+        this.payError.set(apiErrorMessage(error, 'Delivery options could not be loaded.'));
+      }
+    }
+  }
+
+  /** Per-sheet rates resolve against this quote's sheet count. */
+  rateFor(method: ShippingOption): number {
     return method.baseRateCents + method.perSheetRateCents * this.sheetCount();
   }
 
-  /** Stands in for checkout.createSession → redirect to the Stripe-hosted page. */
+  /** Creates the Stripe Checkout Session and hands the browser to Stripe's page. */
   pay(): void {
+    if (this.paying()) return;
+    const id = this.quoteId();
+    const shippingMethodId = this.selectedId();
+    if (!id || !shippingMethodId) {
+      this.payError.set('Choose a delivery option to continue.');
+      return;
+    }
+    if (!this.recipient().trim() || !this.line1().trim() || !this.city().trim() || !this.zip().trim()) {
+      this.payError.set('Enter the delivery name and address before paying.');
+      return;
+    }
+
     this.payError.set(null);
     this.paying.set(true);
-    setTimeout(() => {
-      this.paying.set(false);
-      void this.router.navigate(['/order/confirmation', 'ord_9f21']);
-    }, 700);
+    void this.api
+      .createCheckoutSession(id, {
+        shippingMethodId,
+        recipient: this.recipient(),
+        line1: this.line1(),
+        city: this.city(),
+        state: this.state(),
+        zip: this.zip(),
+      })
+      .then((session) => {
+        // Full navigation, not a router hop — Stripe hosts the payment page.
+        window.location.assign(session.url);
+      })
+      .catch((error: unknown) => {
+        this.paying.set(false);
+        this.payError.set(
+          apiErrorMessage(
+            error,
+            'Card payment is unavailable right now. Nothing was charged — please try again shortly.',
+          ),
+        );
+      });
   }
 }

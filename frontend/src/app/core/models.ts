@@ -90,6 +90,11 @@ export interface Breakdown {
 
 export type QuoteStatus = 'draft' | 'ready' | 'ordered' | 'expired';
 
+/** A shipping method with the rate already resolved for a specific quote. */
+export interface ShippingOption extends ShippingMethod {
+  rateCents: number;
+}
+
 export interface Quote {
   id: string;
   reference: string;
@@ -104,6 +109,17 @@ export interface Quote {
   totalCents: number;
   status: QuoteStatus;
   createdAt: string;
+}
+
+/** Everything the quote detail screen and the work-bed preview need. */
+export interface QuoteDetail extends Quote {
+  drawingId: string;
+  nesting: NestingResult;
+  breakdown: Breakdown;
+  polylines: number[][];
+  bends: BendLine[];
+  bedWidthIn: number;
+  bedHeightIn: number;
 }
 
 export type OrderStatus = 'paid' | 'in_production' | 'shipped' | 'cancelled';

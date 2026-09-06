@@ -24,9 +24,16 @@ before this run.
   detection). Entry component: `frontend/src/app/app.component.ts`
   (`app-root`, carries the `data-testid="app-ready"` readiness landmark — do
   not remove it). Example feature: `frontend/src/app/home/`.
-- `backend/` — NestJS API exposing tRPC procedures (`nestjs-trpc`) plus a
-  plain REST health check. Prisma is the ORM (`backend/prisma/`). Example
-  modules: `backend/src/health/`, `backend/src/users/`, `backend/src/trpc/`.
+- `backend/` — NestJS REST API mounted under `/api`, documented by Swagger at
+  `/api/docs`. Prisma is the ORM (`backend/prisma/`). Modules: `auth/`, `account/`,
+  `admin/`, `bends/`, `checkout/`, `config/`, `drawings/`, `health/`, `quotes/`,
+  `settings/`, `integrations/`, `common/`.
+
+  > The scaffold's `nestjs-trpc` layer was removed during implementation: it did not
+  > compile against the installed `nestjs-trpc@2.13` API (`TrpcModule`/`TrpcRouter`
+  > vs. the package's `TRPCModule`/`Router`), and the multipart upload, raw-body
+  > Stripe webhook and HTML receipt endpoints all need plain REST anyway. The Angular
+  > client calls REST through `frontend/src/app/core/api.service.ts`.
 - `.pipeline/surface.json` — machine-readable contract of routes, components,
   and `data-testid`s for downstream test-generation agents. Keep it in sync
   with every route/component/test-id added.

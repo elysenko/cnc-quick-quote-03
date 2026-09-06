@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard, authGuard } from './core/guards';
+import { quoteDetailResolver } from './quote-detail/quote-detail.resolver';
 
 /**
  * Every screen has its own deep-linkable route. Panels, modals, paging and sorting
@@ -62,8 +63,11 @@ export const routes: Routes = [
       import('./quotes-list/quotes-list.component').then((m) => m.QuotesListComponent),
   },
   {
+    // The detail template has no loading branch, so the quote is resolved before the
+    // route activates and bound straight to the component's `detail` input.
     path: 'quotes/:id',
     canActivate: [authGuard],
+    resolve: { detail: quoteDetailResolver },
     loadComponent: () =>
       import('./quote-detail/quote-detail.component').then((m) => m.QuoteDetailComponent),
   },
