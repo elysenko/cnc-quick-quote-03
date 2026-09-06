@@ -65,6 +65,64 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
+  # One-shot: creates the "drawings" bucket the backend's StorageService writes DXF
+  # uploads to, then exits. The backend also lazily self-heals bucket creation on first
+  # use (see StorageService.ensureBucket), so this is belt-and-suspenders for `docker
+  # compose up` giving a ready bucket immediately rather than on first upload.
+  minio-init:
+    image: minio/mc:latest
+    container_name: cnc_quick_quote_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/drawings
+      "
+    restart: 'no'
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cnc_quick_quote_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/app_development
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-every-environment}
+      APP_SECRET: ${APP_SECRET:-change-me-in-every-environment}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      REDIS_URL: redis://redis:6379
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+      FRONTEND_URL: http://localhost:4200
+      PORT: '3000'
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cnc_quick_quote_frontend
+    restart: unless-stopped
+    ports:
+      - '4200:80'
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
   pgadmin_data:

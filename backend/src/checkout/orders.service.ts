@@ -49,38 +49,50 @@ export class OrdersService {
     private readonly email: EmailService,
   ) {}
 
-  async createIfAbsent(input: CreateOrderInput): Promise<{ order: Order; created: boolean }> {
-    const existing = await this.prisma.order.findUnique({
+  /**
+   * @param tx When supplied (the webhook path passes the transaction that also writes
+   *   the `WebhookEvent` row), all reads/writes run against it instead of opening a new
+   *   transaction — the event row and the order become one atomic, replay-safe unit.
+   *   When omitted (the reconcile-endpoint path), a fresh transaction is opened here.
+   */
+  async createIfAbsent(
+    input: CreateOrderInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<{ order: Order; created: boolean }> {
+    const readClient = tx ?? this.prisma;
+    const existing = await readClient.order.findUnique({
       where: { stripeSessionId: input.stripeSessionId },
     });
     if (existing) return { order: existing, created: false };
 
-    try {
-      const order = await this.prisma.$transaction(async (tx) => {
-        const created = await tx.order.create({
-          data: {
-            userId: input.userId,
-            quoteId: input.quoteId,
-            orderNumber: await this.nextOrderNumber(),
-            confirmationNumber: this.newConfirmationNumber(),
-            stripeSessionId: input.stripeSessionId,
-            stripePaymentIntent: input.stripePaymentIntent,
-            shippingMethodId: input.shippingMethodId,
-            shippingMethodName: input.shippingMethodName,
-            shippingAddressJson: input.shippingAddress as unknown as Prisma.InputJsonValue,
-            subtotalCents: input.subtotalCents,
-            shippingCents: input.shippingCents,
-            totalCents: input.totalCents,
-            status: 'paid',
-          },
-        });
-        await tx.quote.update({ where: { id: input.quoteId }, data: { status: 'ordered' } });
-        return created;
+    const write = async (db: Prisma.TransactionClient): Promise<Order> => {
+      const created = await db.order.create({
+        data: {
+          userId: input.userId,
+          quoteId: input.quoteId,
+          orderNumber: await this.nextOrderNumber(db),
+          confirmationNumber: this.newConfirmationNumber(),
+          stripeSessionId: input.stripeSessionId,
+          stripePaymentIntent: input.stripePaymentIntent,
+          shippingMethodId: input.shippingMethodId,
+          shippingMethodName: input.shippingMethodName,
+          shippingAddressJson: input.shippingAddress as unknown as Prisma.InputJsonValue,
+          subtotalCents: input.subtotalCents,
+          shippingCents: input.shippingCents,
+          totalCents: input.totalCents,
+          status: 'paid',
+        },
       });
+      await db.quote.update({ where: { id: input.quoteId }, data: { status: 'ordered' } });
+      return created;
+    };
+
+    try {
+      const order = tx ? await write(tx) : await this.prisma.$transaction((innerTx) => write(innerTx));
       return { order, created: true };
     } catch (error) {
       // Unique violation: the other path won the race. That is success, not failure.
-      const again = await this.prisma.order.findUnique({
+      const again = await readClient.order.findUnique({
         where: { stripeSessionId: input.stripeSessionId },
       });
       if (again) return { order: again, created: false };
@@ -174,12 +186,12 @@ export class OrdersService {
     };
   }
 
-  private async nextOrderNumber(): Promise<string> {
+  private async nextOrderNumber(db: Prisma.TransactionClient | PrismaService = this.prisma): Promise<string> {
     const year = new Date().getUTCFullYear();
-    const count = await this.prisma.order.count();
+    const count = await db.order.count();
     for (let attempt = 0; attempt < 50; attempt++) {
       const candidate = `ORD-${year}-${String(count + 1 + attempt).padStart(4, '0')}`;
-      const clash = await this.prisma.order.findUnique({ where: { orderNumber: candidate } });
+      const clash = await db.order.findUnique({ where: { orderNumber: candidate } });
       if (!clash) return candidate;
     }
     return `ORD-${year}-${Date.now().toString(36).toUpperCase()}`;

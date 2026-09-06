@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { StripeService } from '../integrations/stripe.service';
 import { OrdersService } from './orders.service';
@@ -133,13 +134,22 @@ export class CheckoutService {
   /**
    * Materialises the order from a paid session. Called by the webhook and by the
    * confirmation page when the webhook has not landed yet; both are idempotent.
+   *
+   * @param tx When supplied — the webhook path, so this write shares the same
+   *   transaction as the `WebhookEvent` insert — every read/write here runs against
+   *   it instead of `this.prisma`, and the confirmation email is NOT queued (the
+   *   order row is not yet committed); the caller queues it once the transaction
+   *   commits. When omitted (the reconcile-endpoint path), this method owns the
+   *   whole write and queues the email itself as soon as the order exists.
    */
   async materialiseFromSession(
     sessionId: string,
     paymentStatus: string,
     paymentIntent: string | null,
     metadata: Record<string, string>,
+    tx?: Prisma.TransactionClient,
   ): Promise<{ orderId: string; created: boolean } | null> {
+    const client = tx ?? this.prisma;
     if (paymentStatus !== 'paid') {
       this.logger.warn(`Session ${sessionId} is not paid (${paymentStatus}) — no order created.`);
       return null;
@@ -151,33 +161,39 @@ export class CheckoutService {
       return null;
     }
 
-    const quote = await this.prisma.quote.findUnique({ where: { id: quoteId } });
+    const quote = await client.quote.findUnique({ where: { id: quoteId } });
     if (!quote) {
       this.logger.error(`Session ${sessionId} references missing quote ${quoteId}.`);
       return null;
     }
 
     const shippingCents = Number(metadata.shippingCents ?? 0) || 0;
-    const { order, created } = await this.orders.createIfAbsent({
-      userId,
-      quoteId,
-      stripeSessionId: sessionId,
-      stripePaymentIntent: paymentIntent,
-      shippingMethodId: metadata.shippingMethodId || null,
-      shippingMethodName: metadata.shippingMethodName || 'Shipping',
-      shippingAddress: {
-        recipient: metadata.recipient ?? '',
-        line1: metadata.line1 ?? '',
-        city: metadata.city ?? '',
-        state: metadata.state ?? '',
-        zip: metadata.zip ?? '',
+    const { order, created } = await this.orders.createIfAbsent(
+      {
+        userId,
+        quoteId,
+        stripeSessionId: sessionId,
+        stripePaymentIntent: paymentIntent,
+        shippingMethodId: metadata.shippingMethodId || null,
+        shippingMethodName: metadata.shippingMethodName || 'Shipping',
+        shippingAddress: {
+          recipient: metadata.recipient ?? '',
+          line1: metadata.line1 ?? '',
+          city: metadata.city ?? '',
+          state: metadata.state ?? '',
+          zip: metadata.zip ?? '',
+        },
+        subtotalCents: quote.totalCents,
+        shippingCents,
+        totalCents: quote.totalCents + shippingCents,
       },
-      subtotalCents: quote.totalCents,
-      shippingCents,
-      totalCents: quote.totalCents + shippingCents,
-    });
+      tx,
+    );
 
-    if (created) this.orders.queueConfirmationEmail(order.id);
+    // Only safe to fire-and-forget the email when we own the transaction: inside the
+    // webhook's outer transaction the order row is not yet committed, so a lookup by
+    // the email task (on the default, non-tx client) would not find it yet.
+    if (created && !tx) this.orders.queueConfirmationEmail(order.id);
     return { orderId: order.id, created };
   }
 
